@@ -1,5 +1,5 @@
 __precompile__()
 
 module LearningAlgebraicVarieties
-    include("estimate_equations.jl.jl")
+    include("estimate_equations.jl")
 end
