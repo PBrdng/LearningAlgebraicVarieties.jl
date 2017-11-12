@@ -1,1 +1,1 @@
-# Learning-varieties
+Learning Algebraic Varieties
