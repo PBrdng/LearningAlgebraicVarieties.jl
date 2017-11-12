@@ -1,3 +1,5 @@
+const FP=FixedPolynomials
+
 ######
 ######
 ######
@@ -21,7 +23,7 @@ for i = 1:sample_size
          end
         data[i,:]=reshape(map(x->x, A), 1,9)
 end
-kernel = equations_estimate(data,d, homogeneous_equations=false)
+kernel = estimate_equations(data,d, homogeneous_equations=false)
 size(kernel)[2] == 11
 ######
 ###### O(3)
@@ -35,7 +37,7 @@ for i = 1:sample_size
         A,B = qr(randn(3,3))
         data[i,:]=reshape(map(x->x^2, A[1:2,1:2]), 1,4)
 end
-kernel = equations_estimate(data,d, homogeneous_equations=false)
+kernel = estimate_equations(data,d, homogeneous_equations=false)
 ######
 ###### Image of four random quadrics in 3-space, over complex numbers
 ######
@@ -55,7 +57,7 @@ for i = 1:sample_size
         FP.evaluate(g[j],x)
     end
 end
-eqs = equations_estimate(data,d,homogeneous_equations=true)
+eqs = estimate_equations(data,d,homogeneous_equations=true)
 ######
 ###### Image of four random quadrics in 3-space, over real numbers
 ######
@@ -75,4 +77,4 @@ for i = 1:sample_size
         FP.evaluate(g[j],x)
     end
 end
-eqs = equations_estimate(data,d,homogeneous_equations=true)
+eqs = estimate_equations(data,d,homogeneous_equations=true)
