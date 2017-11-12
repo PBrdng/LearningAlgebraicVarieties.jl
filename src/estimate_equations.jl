@@ -1,3 +1,6 @@
+export estimate_equations, veronese_array, veronese, Polynomial_from_coefficients
+
+
 import FixedPolynomials
 const FP = FixedPolynomials
 
@@ -60,7 +63,7 @@ end
 #
 # takes as input an array of samples and computes the equations of degree d
 # homogeneous_equations decides whether the equations are homogeneous or not
-function equations_estimate(data::Array{T},d::Int; homogeneous_equations=true, show_cn=false) where T
+function estimate_equations(data::Array{T},d::Int; homogeneous_equations=true, show_cn=false) where T
     # data = convert(Array{Complex128,2},data)
     n=size(data)[2]
     v=veronese(n,d,homogeneous_equations,T)
