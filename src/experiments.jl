@@ -1,3 +1,5 @@
+using FixedPolynomials
+
 const FP=FixedPolynomials
 
 ######
@@ -14,7 +16,7 @@ const FP=FixedPolynomials
 n=9
 d=2
 l=binomial(n+d,d)
-sample_size=l+1
+sample_size=100
 data = ones(sample_size,n)
 for i = 1:sample_size
         A,B = qr(randn(3,3));
@@ -61,6 +63,7 @@ eqs = estimate_equations(data,d,homogeneous_equations=true)
 ######
 ###### Image of four random quadrics in 3-space, over real numbers
 ######
+const FP=FixedPolynomials
 using Homotopy
 n=4
 d=4
