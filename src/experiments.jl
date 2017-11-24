@@ -1,7 +1,6 @@
 using FixedPolynomials
 
 const FP=FixedPolynomials
-
 ######
 ######
 ######
@@ -43,7 +42,7 @@ kernel = estimate_equations(data,d, homogeneous_equations=false)
 ######
 ###### Image of four random quadrics in 3-space, over complex numbers
 ######
-using Homotopy
+using Homotopies
 n=4
 d=4
 N=binomial(n+d-1,d)
@@ -64,7 +63,7 @@ eqs = estimate_equations(data,d,homogeneous_equations=true)
 ###### Image of four random quadrics in 3-space, over real numbers
 ######
 const FP=FixedPolynomials
-using Homotopy
+using Homotopies
 n=4
 d=4
 N=binomial(n+d-1,d)
