@@ -1,17 +1,20 @@
-export MultivariateVandermondeMatrix, Equations
+export MultivariateVandermondeMatrix, FindEquations, round
 
 import FixedPolynomials
 const FP = FixedPolynomials
+import Base: round
+import RowEchelon: rref
 
 
-function Equations(point_sample::Array{T},d::Int64,homogeneous_equations::Bool, alg::Function) where  {T<:Number}
-    M=MultivariateVandermondeMatrix(point_sample, d, homogeneous_equations)
-    estimate_equations(M,alg)
+
+function FindEquations(point_sample::Array{T}, d::Int64, exponents::Array{Array{Int64,1},1}, alg::Function) where  {T<:Number}
+    M=MultivariateVandermondeMatrix(point_sample, d, exponents)
+    get_equations(M,alg)
 end
 
-function Equations(point_sample::Array{T}, d::Int64, exponents::Array{Array{Int64,1},1}, alg::Function) where  {T<:Number}
-    M=MultivariateVandermondeMatrix(point_sample, d, exponents)
-    estimate_equations(M,alg)
+function FindEquations(point_sample::Array{T}, d::Int64, homogeneous_equations::Bool,  alg::Function) where  {T<:Number}
+    M=MultivariateVandermondeMatrix(point_sample, d, homogeneous_equations)
+    get_equations(M,alg)
 end
 
 
@@ -20,7 +23,6 @@ struct MultivariateVandermondeMatrix
     exponents::Array{Array{Int64,1},1}
 
     function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64, exponents::Array{Array{Int64,1},1}) where {T<:Number}
-
         m = size(point_sample)[1]
         n = size(point_sample)[2]
         N = length(exponents)
@@ -32,13 +34,11 @@ struct MultivariateVandermondeMatrix
         new(U, exponents)
     end
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64,homogeneous_equations::Bool) where {T<:Number}
-
+    function MultivariateVandermondeMatrix(point_sample::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
         n=size(point_sample)[2]
         exponents=get_all_exponents(0,d,n,homogeneous_equations)
-        MultivariateVandermondeMatrix(point_sample,d, exponents)
+        MultivariateVandermondeMatrix(point_sample, d, exponents)
     end
-
 end
 
 
@@ -88,37 +88,60 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array
     if l == 0
         return 0
     else
-        map([1:l]) do i
-            non_zero_coeffs = find(x -> abs(x) > 1e-8, kernel[:,i])
+        map([i for i in 1:l]) do i
+            non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
             FP.Polynomial(hcat(exponents[non_zero_coeffs]...), vec(kernel[non_zero_coeffs,i]))
         end
     end
 end
 
+function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Number}
+    map(f) do f1
+        FP.Polynomial(f1.exponents, round.(f1.coefficients, i))
+    end
+end
 
 #
 # Main function
 #
-function estimate_equations(M::MultivariateVandermondeMatrix, alg::Function)
-    kernel=alg(M)
-    tol = 1e-10
-    Polynomials_from_coefficients(kernel,M.exponents,tol)
+function get_equations(M::MultivariateVandermondeMatrix, alg::Function)
+    m, N = size(M.Vandermonde)
+    SVD = svdfact(M.Vandermonde, thin = false)
+    tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
+    rk = sum(SVD.S .> tol)
+
+    kernel = alg(M, SVD.Vt, rk, tol)
+
+    Polynomials_from_coefficients(kernel, M.exponents, tol)
 end
 
 
-function with_svd(M::MultivariateVandermondeMatrix)
-    return nullspace(M.Vandermonde)
+function with_svd(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
+    return Vt[rk + 1:end,:]'
 end
 
 
-function with_qr(M::MultivariateVandermondeMatrix)
-    k=only_dimension(M)
-    F=qrfact(transpose(M.Vandermonde))
-    return F[:Q][:,end-k+1:end]
+function with_qr(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
+    kernel = Vt[rk + 1:end,:]'
+    R = qrfact(kernel')[:R]'
+    n,m = size(R)
+    R = reshape(R, 1, m*n)
+    where_are_zeros = find(x -> abs(x) < tol, R)
+    R = reshape(R, n, m)
+    R[where_are_zeros] = 0.0
+    for i = 1:m
+        R[:,i] = R[:,i]./median(unique(abs.(R[:,i])))
+    end
+    return R
 end
 
 
-function with_rref(M::MultivariateVandermondeMatrix)
-    S = svdfact(M)
-    return nullspace(M.Vandermonde)
+function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
+    kernel = Vt[rk + 1:end,:]'
+    n,m = size(kernel)
+    kernel = reshape(kernel, 1, m*n)
+    where_are_zeros = find(x -> abs(x) < tol, kernel)
+    kernel[where_are_zeros] = 0.0
+    kernel = reshape(kernel, n, m)
+    return rref(kernel')'
 end
