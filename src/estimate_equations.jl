@@ -1,45 +1,42 @@
-export MultivariateVandermondeMatrix
+export MultivariateVandermondeMatrix, Equations
 
 import FixedPolynomials
 const FP = FixedPolynomials
 
 
-function Equations(point_sample::Array{T},d::Int64,homogeneous_equations::Bool, alg::Function) where T
+function Equations(point_sample::Array{T},d::Int64,homogeneous_equations::Bool, alg::Function) where  {T<:Number}
     M=MultivariateVandermondeMatrix(point_sample, d, homogeneous_equations)
+    estimate_equations(M,alg)
+end
+
+function Equations(point_sample::Array{T}, d::Int64, exponents::Array{Array{Int64,1},1}, alg::Function) where  {T<:Number}
+    M=MultivariateVandermondeMatrix(point_sample, d, exponents)
     estimate_equations(M,alg)
 end
 
 
 struct MultivariateVandermondeMatrix
-    point_sample::Array
     Vandermonde::Array
-    sample_size::Int64
-    degree::Int64
-    homogeneous_equations::Bool
     exponents::Array{Array{Int64,1},1}
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64,homogeneous_equations::Bool, exponents::Array{Array{Int64,1},1}) where T
+    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64, exponents::Array{Array{Int64,1},1}) where {T<:Number}
 
-        m=size(point_sample)[1]
-        n=size(point_sample)[2]
-        if homogeneous_equations
-            N=binomial(n+d-1,d)
-        else
-            N=binomial(n+d,d)
-        end
-        v=veronese(n,d,N,exponents,T)
-        U=zeros(T,m,N)
+        m = size(point_sample)[1]
+        n = size(point_sample)[2]
+        N = length(exponents)
+        v = veronese(exponents,T)
+        U = zeros(T,m,N)
         for i=1:m
-            U[i,:]=v(point_sample[i,:])
+            U[i,:] = v(point_sample[i,:])
         end
-        new(point_sample, U, m, d, homogeneous_equations, exponents)
+        new(U, exponents)
     end
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64,homogeneous_equations::Bool) where T
+    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64,homogeneous_equations::Bool) where {T<:Number}
 
         n=size(point_sample)[2]
         exponents=get_all_exponents(0,d,n,homogeneous_equations)
-        MultivariateVandermondeMatrix(point_sample,d,homogeneous_equations, exponents)
+        MultivariateVandermondeMatrix(point_sample,d, exponents)
     end
 
 end
@@ -68,7 +65,8 @@ function get_all_exponents(curr_sum::Int, target_sum::Int, remaining_elements::I
 end
 
 # This function creates the array with the monomials
-function veronese_array(n::Int, d::Int, N::Int64, exponents::Array{Array{Int64,1},1}, ::Type{T}) where T
+function veronese_array(exponents::Array{Array{Int64,1},1}, ::Type{T}) where {T<:Number}
+    N = length(exponents)
     map(1:N) do i
         FP.Polynomial(transpose(hcat(exponents[i]...)), [one(T)])
     end
@@ -76,8 +74,8 @@ end
 
 # This function creates a function v.
 # v(x) is the array with all the monomials in the entries of x of degree d
-function veronese(n::Int, d::Int, N::Int64, exponents::Array{Array{Int64,1},1}, ::Type{T})  where T
-    v = veronese_array(n,d,N,exponents, T)
+function veronese(exponents::Array{Array{Int64,1},1}, ::Type{T})  where {T<:Number}
+    v = veronese_array(exponents, T)
     cfg = FP.JacobianConfig(v)
     function (x::Vector)
         FP.evaluate(v,x,cfg)
@@ -85,13 +83,14 @@ function veronese(n::Int, d::Int, N::Int64, exponents::Array{Array{Int64,1},1}, 
 end
 
 # Creates a polynomial from a coefficient vector
-function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array{Int64,1},1}) where T
+function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array{Int64,1},1}, tol::Float64) where {T<:Number}
     l = size(kernel,2)
     if l == 0
         return 0
     else
         map([1:l]) do i
-            FP.Polynomial(hcat(exponents...), vec(kernel[:,i]))
+            non_zero_coeffs = find(x -> abs(x) > 1e-8, kernel[:,i])
+            FP.Polynomial(hcat(exponents[non_zero_coeffs]...), vec(kernel[non_zero_coeffs,i]))
         end
     end
 end
@@ -102,7 +101,8 @@ end
 #
 function estimate_equations(M::MultivariateVandermondeMatrix, alg::Function)
     kernel=alg(M)
-    Polynomials_from_coefficients(kernel,M.exponents)
+    tol = 1e-10
+    Polynomials_from_coefficients(kernel,M.exponents,tol)
 end
 
 
@@ -110,13 +110,15 @@ function with_svd(M::MultivariateVandermondeMatrix)
     return nullspace(M.Vandermonde)
 end
 
-function only_dimension(M::MultivariateVandermondeMatrix)
-    X=M.Vandermonde
-    return size(X,2)-rank(X)
-end
 
 function with_qr(M::MultivariateVandermondeMatrix)
     k=only_dimension(M)
     F=qrfact(transpose(M.Vandermonde))
     return F[:Q][:,end-k+1:end]
+end
+
+
+function with_rref(M::MultivariateVandermondeMatrix)
+    S = svdfact(M)
+    return nullspace(M.Vandermonde)
 end
