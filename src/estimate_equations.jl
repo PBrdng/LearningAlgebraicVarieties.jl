@@ -110,9 +110,7 @@ function get_equations(M::MultivariateVandermondeMatrix, alg::Function)
     tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
     rk = sum(SVD.S .> tol)
 
-    kernel = alg(M, SVD.Vt, rk, tol)
-
-    Polynomials_from_coefficients(kernel, M.exponents, tol)
+    Polynomials_from_coefficients(alg(M, SVD.Vt, rk, tol), M.exponents, tol)
 end
 
 
