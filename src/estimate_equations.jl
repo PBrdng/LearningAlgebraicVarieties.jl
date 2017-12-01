@@ -135,11 +135,34 @@ end
 
 
 function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
-    kernel = Vt[rk + 1:end,:]'
-    n,m = size(kernel)
-    kernel = reshape(kernel, 1, m*n)
-    where_are_zeros = find(x -> abs(x) < tol, kernel)
-    kernel[where_are_zeros] = 0.0
-    kernel = reshape(kernel, n, m)
-    return rref(kernel')'
+    R = rref(M.Vandermonde)[1:rk,:]
+    n,m = size(R)
+    index = zeros(Int64, rk, 2)
+    for i = 1:rk
+        where_are_the_ones = find(abs.(R[i,:]).> tol)
+        index[i,:] = [i where_are_the_ones[1]]
+    end
+    pivots = setdiff([i for i in 1:m], index[:,2])
+
+    @assert length(pivots) == (m-rk) "RREF: Dimension of kernel and number of pivots do not coincide."
+
+    kernel = zeros(m-rk,m)
+    for i = 1:(m-rk)
+        t = find(index[:,2] .< pivots[i])
+        kernel[i,pivots[i]] = 1
+        for j in t
+            kernel[i, index[j,2]] = - R[index[j,1],pivots[i]]
+        end
+    end
+
+    return kernel'
 end
+# function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
+#     kernel = Vt[rk + 1:end,:]'
+#     n,m = size(kernel)
+#     kernel = reshape(kernel, 1, m*n)
+#     where_are_zeros = find(x -> abs(x) < tol, kernel)
+#     kernel[where_are_zeros] = 0.0
+#     kernel = reshape(kernel, n, m)
+#     return rref(kernel')'
+# end
