@@ -1,3 +1,6 @@
+#############################
+# Algorithms from Section 3 #
+#############################
 export MultivariateVandermondeMatrix, FindEquations, round
 
 import FixedPolynomials
@@ -6,18 +9,17 @@ import Base: round
 import RowEchelon: rref
 
 
-
+# Main wrapper
 function FindEquations(point_sample::Array{T}, d::Int64, exponents::Array{Array{Int64,1},1}, alg::Function) where  {T<:Number}
     M=MultivariateVandermondeMatrix(point_sample, d, exponents)
     get_equations(M,alg)
 end
-
 function FindEquations(point_sample::Array{T}, d::Int64, homogeneous_equations::Bool,  alg::Function) where  {T<:Number}
     M=MultivariateVandermondeMatrix(point_sample, d, homogeneous_equations)
     get_equations(M,alg)
 end
 
-
+# MultivariateVandermondeMatrix struct
 struct MultivariateVandermondeMatrix
     Vandermonde::Array
     exponents::Array{Array{Int64,1},1}
@@ -95,15 +97,14 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array
     end
 end
 
+# enables rounding of FixedPolynomials
 function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Number}
     map(f) do f1
         FP.Polynomial(f1.exponents, round.(f1.coefficients, i))
     end
 end
 
-#
-# Main function
-#
+# function that gets the equations from a MultivariateVandermondeMatrix
 function get_equations(M::MultivariateVandermondeMatrix, alg::Function)
     m, N = size(M.Vandermonde)
     SVD = svdfact(M.Vandermonde, thin = false)
@@ -113,11 +114,10 @@ function get_equations(M::MultivariateVandermondeMatrix, alg::Function)
     Polynomials_from_coefficients(alg(M, SVD.Vt, rk, tol), M.exponents, tol)
 end
 
-
+# several functions to compute the kernel
 function with_svd(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
     return Vt[rk + 1:end,:]'
 end
-
 
 function with_qr(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
     kernel = Vt[rk + 1:end,:]'
@@ -132,7 +132,6 @@ function with_qr(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::
     end
     return R
 end
-
 
 function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
     R = rref(M.Vandermonde)[1:rk,:]
