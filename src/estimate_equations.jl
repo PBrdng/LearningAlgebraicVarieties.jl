@@ -106,26 +106,24 @@ function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Numbe
     end
 end
 
-# several functions to compute the kernel
-function with_svd(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
-    return Vt[rk + 1:end,:]'
-end
 
-function with_qr(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
-    kernel = Vt[rk + 1:end,:]'
-    R = qrfact(kernel')[:R]'
+function with_qr(M::MultivariateVandermondeMatrix, rk::Int, tol::Float64)
+    R = qrfact(M.Vandermonde)[:R]
     n,m = size(R)
-    R = reshape(R, 1, m*n)
-    where_are_zeros = find(x -> abs(x) < tol, R)
-    R = reshape(R, n, m)
-    R[where_are_zeros] = 0.0
-    for i = 1:m
-        R[:,i] = R[:,i]./median(unique(abs.(R[:,i])))
+    index = find(x -> abs(x) < tol, [R[i,i] for i in 1:m])
+    index2 = setdiff([i for i in 1:m], index)
+    R_small = R[:,index2]
+
+    kernel = zeros(eltype(R), m-rk, m)
+
+    for i = 1:(m-rk)
+        kernel[i,index[i]] = one(eltype(R))
+        kernel[i,index2] =  (-1) .* R_small\R[:,index[i]]
     end
-    return R
+    return transpose(kernel)
 end
 
-function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
+function with_rref(M::MultivariateVandermondeMatrix, rk::Int, tol::Float64)
     R = rref(M.Vandermonde)[1:rk,:]
     n,m = size(R)
     index = zeros(Int64, rk, 2)
@@ -137,7 +135,7 @@ function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol
 
     @assert length(pivots) == (m-rk) "RREF: Dimension of kernel and number of pivots do not coincide."
 
-    kernel = zeros(T, m-rk, m)
+    kernel = zeros(eltype(R), m-rk, m)
     for i = 1:(m-rk)
         t = find(index[:,2] .< pivots[i])
         kernel[i,pivots[i]] = 1
@@ -146,7 +144,7 @@ function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol
         end
     end
 
-    return kernel'
+    return transpose(kernel)
 end
 
 # function that gets the equations from a MultivariateVandermondeMatrix
@@ -157,11 +155,11 @@ function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
     rk = sum(SVD.S .> tol)
 
     if alg == :with_svd
-        return Polynomials_from_coefficients(with_svd(M, SVD.Vt, rk, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents, tol)
     elseif alg == :with_qr
-        return Polynomials_from_coefficients(with_qr(M, SVD.Vt, rk, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_qr(M, rk, tol), M.exponents, tol)
     elseif alg == :with_rref
-        return Polynomials_from_coefficients(with_rref(M, SVD.Vt, rk, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_rref(M, rk, tol), M.exponents, tol)
     else
         println("Method $(alg) not known.")
     end

@@ -1,5 +1,5 @@
 using LearningAlgebraicVarieties
-
+using FixedPolynomials
 ######
 ###### Finding Equations of O(3)
 ######
@@ -16,12 +16,16 @@ for i = 1:sample_size
         data[i,:]=reshape(map(x->x, A), 1,9)
 end
 f1 = FindEquations(data, :with_svd, degree = d, homogeneous_equations = false)
-f2 = FindEquations(data, :with_rref, degree = d, homogeneous_equations = false)
+f2 = FindEquations(data, :with_qr, degree = d, homogeneous_equations = false)
+f3 = FindEquations(data, :with_rref, degree = d, homogeneous_equations = false)
+println("f1 evaluated at a random point in the variety is $(evaluate(f1, vec(qrfact(rand(3,3))[:Q])))\n")
+println("g2 evaluated at a random point in the variety is $(evaluate(f2, vec(qrfact(rand(3,3))[:Q])))\n")
+println("g3 evaluated at a random point in the variety is $(evaluate(f3, vec(qrfact(rand(3,3))[:Q])))\n")
+
 round(f2, 3)
 ######
 ###### Image of four random quadrics in 3-space, over complex numbers
 ######
-using FixedPolynomials
 n=4
 d=4
 N=binomial(n+d-1,d)
@@ -38,8 +42,10 @@ for i = 1:sample_size
 end
 g1 = FindEquations(data, :with_svd, degree = d, homogeneous_equations=true)
 g2 = FindEquations(data, :with_qr, degree = d, homogeneous_equations=true)
+g3 = FindEquations(data, :with_rref, degree = d, homogeneous_equations=true)
 println("g1 evaluated at a random point in the variety is $(evaluate(g1, evaluate(f,randn(3)+im*randn(3))))\n")
-println("g1 evaluated at a random point in the variety is $(evaluate(g2, evaluate(f,randn(3)+im*randn(3))))\n")
+println("g2 evaluated at a random point in the variety is $(evaluate(g2, evaluate(f,randn(3)+im*randn(3))))\n")
+println("g3 evaluated at a random point in the variety is $(evaluate(g3, evaluate(f,randn(3)+im*randn(3))))\n")
 #RREF does not cope well with complex numbers
 
 # ######
