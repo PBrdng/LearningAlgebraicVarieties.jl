@@ -2,6 +2,8 @@
 # Algorithms from Section 3 #
 #############################
 
+export EstimateDimensionMLE, EstimateDimensionANOVA
+
 #################
 # Nonlinear PCA #
 #################
@@ -13,6 +15,7 @@
 function EstimateDimensionMLE(data::Array{Float64,2}, x::Vector{Float64}, epsilon::Float64)
     dist = pairwise(Euclidean(), data', reshape(x,length(x),1))
     index = find(dist .< epsilon)
+    @assert length(index) > 0 "No data points available, ϵ is too small."
     dist = sort(dist[index])
     k = length(dist)
     d_hat = inv(sum([log(epsilon / dist[i]) for i in 1:k]) / k)
@@ -23,6 +26,8 @@ end
 # Velasco-Quiroz-Diaz-Algorithm #
 #################################
 # A function to compute the U-statistic from Equation (3)
+using Distances
+
 function S_statistic(data::Array{Float64,2})
     m = size(data,1)
     dist = pairwise(CosineDist(), data')
@@ -35,6 +40,7 @@ end
 function EstimateDimensionANOVA(data::Array{Float64,2}, x::Vector{Float64}, epsilon::Float64)
     dist = pairwise(Euclidean(), data', reshape(x,length(x),1))
     index = find(dist .< epsilon)
+    @assert length(index) > 0 "No data points available, ϵ is too small."
     data = data[index,:]
     m=size(data,1)
     # Compute the X_i-x from Definition 1
@@ -52,12 +58,12 @@ function EstimateDimensionANOVA(data::Array{Float64,2}, x::Vector{Float64}, epsi
 
     # Compute the βs recursively. Since they are decreasing,
     # I only need to check for when U>β happens
-    while n_even <= D/2+1 && S < β_even
+    while S < β_even
         n_even = n_even + 1
         β_even = β_even - 2 / (2*n_even)^2
     end
 
-    while n_odd <= D/2+1 && S < β_odd
+    while S < β_odd
         n_odd = n_odd + 1
         β_odd = β_odd - 2 / (2*n_odd-1)^2
     end

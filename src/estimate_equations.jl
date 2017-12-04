@@ -10,12 +10,14 @@ import RowEchelon: rref
 
 
 # Main wrapper
-function FindEquations(point_sample::Array{T}, d::Int64, exponents::Array{Array{Int64,1},1}, alg::Function) where  {T<:Number}
-    M=MultivariateVandermondeMatrix(point_sample, d, exponents)
+function FindEquations(point_sample::Array{T}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
+    M=MultivariateVandermondeMatrix(point_sample, exponents)
     get_equations(M,alg)
 end
-function FindEquations(point_sample::Array{T}, d::Int64, homogeneous_equations::Bool,  alg::Function) where  {T<:Number}
-    M=MultivariateVandermondeMatrix(point_sample, d, homogeneous_equations)
+function FindEquations(point_sample::Array{T}, alg::Symbol; degree = 0, homogeneous_equations=false) where  {T<:Number}
+    @assert typeof(degree) == Int "The degree must be of type Int."
+    @assert degree > 0 "The degree must be a positive integer."
+    M=MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
     get_equations(M,alg)
 end
 
@@ -24,7 +26,7 @@ struct MultivariateVandermondeMatrix
     Vandermonde::Array
     exponents::Array{Array{Int64,1},1}
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T},d::Int64, exponents::Array{Array{Int64,1},1}) where {T<:Number}
+    function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Array{Array{Int64,1},1}) where {T<:Number}
         m = size(point_sample)[1]
         n = size(point_sample)[2]
         N = length(exponents)
@@ -39,7 +41,7 @@ struct MultivariateVandermondeMatrix
     function MultivariateVandermondeMatrix(point_sample::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
         n=size(point_sample)[2]
         exponents=get_all_exponents(0,d,n,homogeneous_equations)
-        MultivariateVandermondeMatrix(point_sample, d, exponents)
+        MultivariateVandermondeMatrix(point_sample, exponents)
     end
 end
 
@@ -104,16 +106,6 @@ function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Numbe
     end
 end
 
-# function that gets the equations from a MultivariateVandermondeMatrix
-function get_equations(M::MultivariateVandermondeMatrix, alg::Function)
-    m, N = size(M.Vandermonde)
-    SVD = svdfact(M.Vandermonde, thin = false)
-    tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
-    rk = sum(SVD.S .> tol)
-
-    Polynomials_from_coefficients(alg(M, SVD.Vt, rk, tol), M.exponents, tol)
-end
-
 # several functions to compute the kernel
 function with_svd(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
     return Vt[rk + 1:end,:]'
@@ -145,7 +137,7 @@ function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol
 
     @assert length(pivots) == (m-rk) "RREF: Dimension of kernel and number of pivots do not coincide."
 
-    kernel = zeros(m-rk,m)
+    kernel = zeros(T, m-rk, m)
     for i = 1:(m-rk)
         t = find(index[:,2] .< pivots[i])
         kernel[i,pivots[i]] = 1
@@ -156,12 +148,22 @@ function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol
 
     return kernel'
 end
-# function with_rref(M::MultivariateVandermondeMatrix, Vt::Matrix{T}, rk::Int, tol::Float64) where {T<:Number}
-#     kernel = Vt[rk + 1:end,:]'
-#     n,m = size(kernel)
-#     kernel = reshape(kernel, 1, m*n)
-#     where_are_zeros = find(x -> abs(x) < tol, kernel)
-#     kernel[where_are_zeros] = 0.0
-#     kernel = reshape(kernel, n, m)
-#     return rref(kernel')'
-# end
+
+# function that gets the equations from a MultivariateVandermondeMatrix
+function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
+    m, N = size(M.Vandermonde)
+    SVD = svdfact(M.Vandermonde, thin = false)
+    tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
+    rk = sum(SVD.S .> tol)
+
+    if alg == :with_svd
+        return Polynomials_from_coefficients(with_svd(M, SVD.Vt, rk, tol), M.exponents, tol)
+    elseif alg == :with_qr
+        return Polynomials_from_coefficients(with_qr(M, SVD.Vt, rk, tol), M.exponents, tol)
+    elseif alg == :with_rref
+        return Polynomials_from_coefficients(with_rref(M, SVD.Vt, rk, tol), M.exponents, tol)
+    else
+        println("Method $(alg) not known.")
+    end
+
+end
