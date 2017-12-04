@@ -126,7 +126,7 @@ end
 function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
     R = rref(M.Vandermonde)
     n,m = size(R)
-    R = R[find([norm(R[i,:]) for i in 1:n] .> tol),:]
+    R = R[find([norm(R[i,:]) for i in 1:n] .> m * tol),:]
     rk = size(R,1)
     index = zeros(Int64, rk, 2)
     for i = 1:rk
