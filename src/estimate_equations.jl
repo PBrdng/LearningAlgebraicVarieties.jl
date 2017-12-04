@@ -107,25 +107,27 @@ function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Numbe
 end
 
 
-function with_qr(M::MultivariateVandermondeMatrix, rk::Int, tol::Float64)
+function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
     R = qrfact(M.Vandermonde)[:R]
     n,m = size(R)
     index = find(x -> abs(x) < tol, [R[i,i] for i in 1:m])
     index2 = setdiff([i for i in 1:m], index)
     R_small = R[:,index2]
 
-    kernel = zeros(eltype(R), m-rk, m)
+    kernel = zeros(eltype(R), length(index), m)
 
-    for i = 1:(m-rk)
+    for i = 1:length(index)
         kernel[i,index[i]] = one(eltype(R))
         kernel[i,index2] =  (-1) .* R_small\R[:,index[i]]
     end
     return transpose(kernel)
 end
 
-function with_rref(M::MultivariateVandermondeMatrix, rk::Int, tol::Float64)
-    R = rref(M.Vandermonde)[1:rk,:]
+function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
+    R = rref(M.Vandermonde)
     n,m = size(R)
+    R = R[find([norm(R[i,:]) for i in 1:n] .> tol),:]
+    rk = size(R,1)
     index = zeros(Int64, rk, 2)
     for i = 1:rk
         where_are_the_ones = find(abs.(R[i,:]).> tol)
@@ -152,14 +154,14 @@ function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
     m, N = size(M.Vandermonde)
     SVD = svdfact(M.Vandermonde, thin = false)
     tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
-    rk = sum(SVD.S .> tol)
 
     if alg == :with_svd
+        rk = sum(SVD.S .> tol)
         return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents, tol)
     elseif alg == :with_qr
-        return Polynomials_from_coefficients(with_qr(M, rk, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_qr(M, tol), M.exponents, tol)
     elseif alg == :with_rref
-        return Polynomials_from_coefficients(with_rref(M, rk, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_rref(M, tol), M.exponents, tol)
     else
         println("Method $(alg) not known.")
     end
