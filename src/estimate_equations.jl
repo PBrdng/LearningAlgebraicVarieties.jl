@@ -4,6 +4,8 @@
 export MultivariateVandermondeMatrix, FindEquations, round
 
 import FixedPolynomials
+import MultivariatePolynomials
+import DynamicPolynomials: @polyvar
 const FP = FixedPolynomials
 import Base: round
 import RowEchelon: rref
@@ -27,6 +29,9 @@ struct MultivariateVandermondeMatrix
     exponents::Array{Array{Int64,1},1}
 
     function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Array{Array{Int64,1},1}) where {T<:Number}
+
+        @assert length(unique(length.(exponents))) == 1 "Error: Exponents differ in size."
+
         m = size(point_sample)[1]
         n = size(point_sample)[2]
         N = length(exponents)
@@ -87,28 +92,27 @@ function veronese(exponents::Array{Array{Int64,1},1}, ::Type{T})  where {T<:Numb
 end
 
 # Creates a polynomial from a coefficient vector
-function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array{Int64,1},1}, tol::Float64) where {T<:Number}
+function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array{Int64,1},1}) where {T<:Number}
+    tol = 1e-12
     l = size(kernel,2)
+    nvars = length(exponents[1])
+    @polyvar x[1:nvars]
+
     if l == 0
         return 0
     else
         map([i for i in 1:l]) do i
             non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
             if length(non_zero_coeffs) > 0
-                return FP.Polynomial(hcat(exponents[non_zero_coeffs]...), vec(kernel[non_zero_coeffs,i]))
+                monomial = map(c -> prod(map(i -> x[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
+                return dot(kernel[non_zero_coeffs,i], monomial)
             else
-                return 0
+                return 0.0*x[1]
             end
         end
     end
 end
 
-# enables rounding of FixedPolynomials
-function round(f::Array{FixedPolynomials.Polynomial{T}}, i::Int) where {T<:Number}
-    map(f) do f1
-        FP.Polynomial(f1.exponents, round.(f1.coefficients, i))
-    end
-end
 
 
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
@@ -162,11 +166,11 @@ function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
 
     if alg == :with_svd
         rk = sum(SVD.S .> tol)
-        return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents, tol)
+        return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents)
     elseif alg == :with_qr
-        return Polynomials_from_coefficients(with_qr(M, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_qr(M, tol), M.exponents)
     elseif alg == :with_rref
-        return Polynomials_from_coefficients(with_rref(M, tol), M.exponents, tol)
+        return Polynomials_from_coefficients(with_rref(M, tol), M.exponents)
     else
         println("Method $(alg) not known.")
     end

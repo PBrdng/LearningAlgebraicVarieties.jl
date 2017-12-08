@@ -1,4 +1,6 @@
 FixedPolynomials
+MultivariatePolynomials
+DynamicPolynomials
 RowEchelon
 Distances
 Clustering
