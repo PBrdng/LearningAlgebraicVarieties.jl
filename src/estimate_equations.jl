@@ -94,7 +94,11 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array
     else
         map([i for i in 1:l]) do i
             non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
-            FP.Polynomial(hcat(exponents[non_zero_coeffs]...), vec(kernel[non_zero_coeffs,i]))
+            if length(non_zero_coeffs) > 0
+                return FP.Polynomial(hcat(exponents[non_zero_coeffs]...), vec(kernel[non_zero_coeffs,i]))
+            else
+                return 0
+            end
         end
     end
 end
@@ -110,6 +114,9 @@ end
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
     R = qrfact(M.Vandermonde)[:R]
     n,m = size(R)
+
+    @assert n > m-1 "Not enough data points. Use SVD instead."
+
     index = find(x -> abs(x) < tol, [R[i,i] for i in 1:m])
     index2 = setdiff([i for i in 1:m], index)
     R_small = R[:,index2]
@@ -134,8 +141,6 @@ function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
         index[i,:] = [i where_are_the_ones[1]]
     end
     pivots = setdiff([i for i in 1:m], index[:,2])
-
-    @assert length(pivots) == (m-rk) "RREF: Dimension of kernel and number of pivots do not coincide."
 
     kernel = zeros(eltype(R), m-rk, m)
     for i = 1:(m-rk)
