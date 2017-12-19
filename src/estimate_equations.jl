@@ -1,14 +1,14 @@
 #############################
 # Algorithms from Section 3 #
 #############################
-export MultivariateVandermondeMatrix, FindEquations, round
+export MultivariateVandermondeMatrix, FindEquations, get_equations
 
 import FixedPolynomials
+const FP = FixedPolynomials
 import MultivariatePolynomials
 import DynamicPolynomials: @polyvar
-const FP = FixedPolynomials
-import Base: round
 import RowEchelon: rref
+import Combinatorics: multiexponents
 
 
 # Main wrapper
@@ -28,7 +28,7 @@ struct MultivariateVandermondeMatrix
     Vandermonde::Array
     exponents::Array{Array{Int64,1},1}
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Array{Array{Int64,1},1}) where {T<:Number}
+    function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Vector) where {T<:Number}
 
         @assert length(unique(length.(exponents))) == 1 "Error: Exponents differ in size."
 
@@ -45,36 +45,18 @@ struct MultivariateVandermondeMatrix
 
     function MultivariateVandermondeMatrix(point_sample::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
         n=size(point_sample)[2]
-        exponents=get_all_exponents(0,d,n,homogeneous_equations)
+        if homogeneous_equations
+            exponents = collect(multiexponents(n,d))
+        else
+            exponents = vcat(map(i -> collect(multiexponents(n,i)), 0:d)...)
+        end
+        # exponents=get_all_exponents(0,d,n,homogeneous_equations)
         MultivariateVandermondeMatrix(point_sample, exponents)
     end
 end
 
-
-# This function is from the Fixed Polynomials package.
-# I copied it and modified it for our purposes.
-function get_all_exponents(curr_sum::Int, target_sum::Int, remaining_elements::Int, homogeneous::Bool)::Vector{Vector{Int}}
-    if remaining_elements == 0
-        return [[]]
-    end
-    if curr_sum == target_sum
-        return [zeros(Int, remaining_elements)]
-    end
-    if remaining_elements == 1 && homogeneous
-        return map(x-> [x], [target_sum - curr_sum])
-    elseif remaining_elements == 1
-        return map(x-> [x], 0:(target_sum - curr_sum))
-    end
-    results = []
-    for x=0:(target_sum-curr_sum)
-        remaining_results = get_all_exponents(curr_sum + x, target_sum, remaining_elements - 1,homogeneous)
-        append!(results, map(xs -> [x; xs], remaining_results))
-    end
-    results
-end
-
 # This function creates the array with the monomials
-function veronese_array(exponents::Array{Array{Int64,1},1}, ::Type{T}) where {T<:Number}
+function veronese_array(exponents::Vector, ::Type{T}) where {T<:Number}
     N = length(exponents)
     map(1:N) do i
         FP.Polynomial(transpose(hcat(exponents[i]...)), [one(T)])
@@ -83,7 +65,7 @@ end
 
 # This function creates a function v.
 # v(x) is the array with all the monomials in the entries of x of degree d
-function veronese(exponents::Array{Array{Int64,1},1}, ::Type{T})  where {T<:Number}
+function veronese(exponents::Vector, ::Type{T})  where {T<:Number}
     v = veronese_array(exponents, T)
     cfg = FP.JacobianConfig(v)
     function (x::Vector)

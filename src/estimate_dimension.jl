@@ -27,8 +27,8 @@ end
 #################
 # PCA #
 #################
-function EstimateDimensionPCA(data::Array{Float64,2})
-    return rank(data)
+function EstimateDimensionPCA(data::Array{Float64,2}, ϵ::Float64)
+    return sum(svdvals(data) .< ϵ)
 end
 
 
@@ -36,21 +36,21 @@ end
 # Nonlinear PCA #
 #################
 function EstimateDimensionNPCA(data::Array{Float64,2}, ϵ_array::Vector{Float64})
-    dist = pairwise(Euclidean(), data')
-    H = hclust(dist, :single)
-    m = size(data,1)
-    output = map(ϵ_array) do ϵ
+    return map(ϵ_array) do ϵ
+        dist = pairwise(Euclidean(), data')
+        H = hclust(dist, :single)
+        m = size(data,1)
         myclust = cutree(H, h = ϵ)
         groups = unique(myclust)
         r = map(groups) do group
             index = find(myclust .== group)
-            return EstimateDimensionPCA(data[index,:]) * length(index)
+            return EstimateDimensionPCA(data[index,:], ϵ) * length(index)
         end
         return sum(r) / m
     end
-
-    return output
 end
+
+
 
 #########################
 # Correlation Dimension #
