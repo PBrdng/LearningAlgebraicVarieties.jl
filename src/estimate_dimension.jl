@@ -5,7 +5,7 @@
 export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 import Clustering: hclust, cutree
-using Distances
+import Distances: pairwise, Euclidean
 using Plots
 
 
