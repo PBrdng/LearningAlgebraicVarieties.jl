@@ -38,7 +38,7 @@ struct MultivariateVandermondeMatrix
         v = veronese(exponents,T)
         U = zeros(T,m,N)
         for i=1:m
-            U[i,:] = v(point_sample[i,:])
+            U[i,:] = v(point_sample[:,i])
         end
         new(U, exponents)
     end

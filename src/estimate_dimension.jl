@@ -2,7 +2,7 @@
 # Algorithms from Section 3 #
 #############################
 
-export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA
+export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 import Clustering: hclust, cutree
 using Distances
@@ -18,7 +18,7 @@ function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S};
     sort!(limits)
     ϵ = Array(linspace(limits[1], limits[2], number_of_epsilons))
 
-    Plots.plot(ϵ, method(data, ϵ), title=string(method))
+    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=2)
     xlabel!("epsilon")
     ylabel!("d(epsilon)")
 end
@@ -36,15 +36,15 @@ end
 # Nonlinear PCA #
 #################
 function EstimateDimensionNPCA(data::Array{Float64,2}, ϵ_array::Vector{Float64})
+    dist = pairwise(Euclidean(), data)
+    H = hclust(dist, :single)
+    m = size(data,2)
     return map(ϵ_array) do ϵ
-        dist = pairwise(Euclidean(), data')
-        H = hclust(dist, :single)
-        m = size(data,1)
         myclust = cutree(H, h = ϵ)
         groups = unique(myclust)
         r = map(groups) do group
             index = find(myclust .== group)
-            return EstimateDimensionPCA(data[index,:], ϵ) * length(index)
+            return EstimateDimensionPCA(data[:,index], ϵ) * length(index)
         end
         return sum(r) / m
     end
@@ -56,9 +56,8 @@ end
 # Correlation Dimension #
 #########################
 function EstimateDimensionCorrSum(data::Array{Float64,2}, ϵ_array::Vector{Float64})
-    m = size(data,1);
-    n = size(data,2);
-    D = pairwise(Euclidean(), data')
+    m = size(data,2)
+    D = pairwise(Euclidean(), data)
 
     return map(ϵ_array) do ϵ
         count = (sum(D .< ϵ) - m) / 2
@@ -79,7 +78,7 @@ function BL_MLE(dist::Array{Float64,1}, ϵ::Float64)
     return abs(inv(sum(log.(ϵ .* inv.(dist))) / k))
 end
 function EstimateDimensionMLE(data::Array{Float64,2}, x::Vector{Float64}, ϵ_array::Vector{Float64})
-    dist = pairwise(Euclidean(), data', reshape(x,length(x),1))
+    dist = pairwise(Euclidean(), data, reshape(x,length(x),1))
     return map(ϵ_array) do ϵ
         index = find(dist .< ϵ)
         if length(index) > 1
@@ -90,8 +89,8 @@ function EstimateDimensionMLE(data::Array{Float64,2}, x::Vector{Float64}, ϵ_arr
     end
 end
 function EstimateDimensionMLE(data::Array{Float64,2}, ϵ_array::Vector{Float64})
-    m = size(data, 1)
-    dist = pairwise(Euclidean(), data')
+    m = size(data, 2)
+    dist = pairwise(Euclidean(), data)
     estimators = map(ϵ_array) do ϵ
             estimator = zeros(Float64, m, 2)
             for i = 1:m
@@ -118,16 +117,16 @@ end
 #################################
 # A function to compute the U-statistic from Equation (3)
 function S_statistic(data::Array{Float64,2})
-    m = size(data,1)
-    dist = pairwise(CosineDist(), data')
+    m = size(data,2)
+    dist = pairwise(CosineDist(), data)
     dist = (acos.((-1) .* (dist .- 1)) .- (pi/2))
     dot(dist, dist) / (2 * binomial(m,2))
 end
 # Main function to compute the estimate of the dimension
 # It is the algorithm from Sec. 2.1
 function DQV_Estimator(data::Array{Float64,2}, x::Vector{Float64})
-    m = size(data,1)
-    data_x = data - repmat(x', m)
+    m = size(data, 2)
+    data_x = data - repmat(x', m)'
     S = S_statistic(data_x)
 
     # Now we have to compute the variances β from Lemma 2.5
@@ -165,27 +164,27 @@ function DQV_Estimator(data::Array{Float64,2}, x::Vector{Float64})
     end
 end
 function EstimateDimensionANOVA(data::Array{Float64,2}, x::Vector{Float64}, ϵ_array::Vector{Float64})
-    dist = pairwise(Euclidean(), data', reshape(x,length(x),1))
+    dist = pairwise(Euclidean(), data, reshape(x,length(x),1))
     return map(ϵ_array) do ϵ
         index = find(dist .< ϵ)
             if length(index) > 0
-                return DQV_Estimator(data[index,:], x)
+                return DQV_Estimator(data[:,index], x)
             else
                 return 0
             end
         end
 end
 function EstimateDimensionANOVA(data::Array{Float64,2}, ϵ_array::Vector{Float64})
-        m = size(data, 1)
-        dist = pairwise(Euclidean(), data')
+        m = size(data, 2)
+        dist = pairwise(Euclidean(), data)
         estimators = map(ϵ_array) do ϵ
                 estimator = zeros(Float64, m, 2)
                 for i = 1:m
                     index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                     k = length(index)
                     if k > 1
-                        data_i = data[[1:i-1;i+1:m],:]
-                        estimator[i,:] = [DQV_Estimator(data_i[index,:], data[i,:]) * k, k]
+                        data_i = data[:,[1:i-1;i+1:m]]
+                        estimator[i,:] = [DQV_Estimator(data_i[:,index], data[:,i]) * k, k]
                     else
                         estimator[i,:] = [0.0, 0]
                     end
