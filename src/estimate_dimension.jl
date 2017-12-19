@@ -2,7 +2,7 @@
 # Algorithms from Section 3 #
 #############################
 
-export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA
+export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 import Clustering: hclust, cutree
 using Distances
@@ -18,7 +18,7 @@ function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S};
     sort!(limits)
     ϵ = Array(linspace(limits[1], limits[2], number_of_epsilons))
 
-    Plots.plot(ϵ, method(data, ϵ), title=string(method))
+    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=2)
     xlabel!("epsilon")
     ylabel!("d(epsilon)")
 end
@@ -36,10 +36,10 @@ end
 # Nonlinear PCA #
 #################
 function EstimateDimensionNPCA(data::Array{Float64,2}, ϵ_array::Vector{Float64})
+    dist = pairwise(Euclidean(), data)
+    H = hclust(dist, :single)
+    m = size(data,2)
     return map(ϵ_array) do ϵ
-        dist = pairwise(Euclidean(), data)
-        H = hclust(dist, :single)
-        m = size(data,2)
         myclust = cutree(H, h = ϵ)
         groups = unique(myclust)
         r = map(groups) do group
