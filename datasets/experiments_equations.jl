@@ -6,7 +6,7 @@ using FixedPolynomials
 n=9
 d=2
 l=binomial(n+d,d)
-sample_size=110
+sample_size=200
 data = ones(sample_size,n)
 for i = 1:sample_size
         A,B = qr(randn(3,3));

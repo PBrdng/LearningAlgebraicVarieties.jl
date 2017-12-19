@@ -114,7 +114,6 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array
 end
 
 
-
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
     R = qrfact(M.Vandermonde)[:R]
     n,m = size(R)
