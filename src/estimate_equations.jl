@@ -26,14 +26,13 @@ end
 # MultivariateVandermondeMatrix struct
 struct MultivariateVandermondeMatrix
     Vandermonde::Array
-    exponents::Array{Array{Int64,1},1}
+    exponents::Vector
 
     function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Vector) where {T<:Number}
 
         @assert length(unique(length.(exponents))) == 1 "Error: Exponents differ in size."
 
-        m = size(point_sample)[1]
-        n = size(point_sample)[2]
+        m = size(point_sample,2)
         N = length(exponents)
         v = veronese(exponents,T)
         U = zeros(T,m,N)
@@ -44,7 +43,7 @@ struct MultivariateVandermondeMatrix
     end
 
     function MultivariateVandermondeMatrix(point_sample::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
-        n=size(point_sample)[2]
+        n=size(point_sample,1)
         if homogeneous_equations
             exponents = collect(multiexponents(n,d))
         else
@@ -74,7 +73,7 @@ function veronese(exponents::Vector, ::Type{T})  where {T<:Number}
 end
 
 # Creates a polynomial from a coefficient vector
-function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array{Int64,1},1}) where {T<:Number}
+function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) where {T<:Number}
     tol = 1e-12
     l = size(kernel,2)
     nvars = length(exponents[1])
@@ -83,7 +82,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Array{Array
     if l == 0
         return 0
     else
-        map([i for i in 1:l]) do i
+        map(1:l) do i
             non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
             if length(non_zero_coeffs) > 0
                 monomial = map(c -> prod(map(i -> x[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)

@@ -5,7 +5,7 @@
 export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 import Clustering: hclust, cutree
-import Distances: pairwise, Euclidean
+import Distances: pairwise, Euclidean, CosineDist
 using Plots
 
 
@@ -18,9 +18,7 @@ function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S};
     sort!(limits)
     ϵ = Array(linspace(limits[1], limits[2], number_of_epsilons))
 
-    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=2)
-    xlabel!("epsilon")
-    ylabel!("d(epsilon)")
+    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=2, xaxis = ("epsilon", font(20)), yaxis = ("d(epsilon)", font(20)))
 end
 
 
@@ -28,7 +26,7 @@ end
 # PCA #
 #################
 function EstimateDimensionPCA(data::Array{Float64,2}, ϵ::Float64)
-    return sum(svdvals(data) .< ϵ)
+    return sum(svdvals(data) .> ϵ)
 end
 
 
