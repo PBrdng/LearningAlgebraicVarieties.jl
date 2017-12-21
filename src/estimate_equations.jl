@@ -20,7 +20,7 @@ function FindEquations(point_sample::Array{T}, alg::Symbol; degree = 0, homogene
     @assert typeof(degree) == Int "The degree must be of type Int."
     @assert degree > 0 "The degree must be a positive integer."
     M=MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
-    get_equations(M,alg)
+    get_equations(M, alg)
 end
 
 # MultivariateVandermondeMatrix struct
@@ -47,7 +47,7 @@ struct MultivariateVandermondeMatrix
         if homogeneous_equations
             exponents = collect(multiexponents(n,d))
         else
-            exponents = vcat(map(i -> collect(multiexponents(n,i)), 0:d)...)
+            exponents = vcat(map(i -> collect(multiexponents(n,-i)), -d:0)...)
         end
         # exponents=get_all_exponents(0,d,n,homogeneous_equations)
         MultivariateVandermondeMatrix(point_sample, exponents)
@@ -74,10 +74,10 @@ end
 
 # Creates a polynomial from a coefficient vector
 function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) where {T<:Number}
-    tol = 1e-12
+    tol = 1e-10
     l = size(kernel,2)
     nvars = length(exponents[1])
-    @polyvar x[1:nvars]
+    @polyvar x_[1:nvars]
 
     if l == 0
         return 0
@@ -85,7 +85,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
         map(1:l) do i
             non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
             if length(non_zero_coeffs) > 0
-                monomial = map(c -> prod(map(i -> x[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
+                monomial = map(c -> prod(map(i -> x_[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
                 return dot(kernel[non_zero_coeffs,i], monomial)
             else
                 return 0.0*x[1]
@@ -142,7 +142,7 @@ end
 function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
     m, N = size(M.Vandermonde)
     SVD = svdfact(M.Vandermonde, thin = false)
-    tol = max(m,N)*maximum(SVD.S)*eps(eltype(SVD.S))
+    tol = max(m,N) * maximum(SVD.S) * eps(eltype(SVD.S))
 
     if alg == :with_svd
         rk = sum(SVD.S .> tol)

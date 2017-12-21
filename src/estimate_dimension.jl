@@ -12,13 +12,15 @@ using Plots
 ######################
 # Dimension Diagrams #
 ######################
-function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S}; number_of_epsilons = 100) where {S,T <: Number}
+function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S}; eps_ticks = 100) where {S,T <: Number}
     @assert length(limits) == 2 "The limits must have two entries."
 
     sort!(limits)
-    ϵ = Array(linspace(limits[1], limits[2], number_of_epsilons))
+    ϵ = Array(linspace(limits[1], limits[2], eps_ticks))
 
-    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=2, xaxis = ("epsilon", font(20)), yaxis = ("d(epsilon)", font(20)))
+    n = size(data,1)
+    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=3, xaxis = ("epsilon", font(20)), yaxis = ("d(epsilon)", font(18)))
+    ylims!(0,n+1)
 end
 
 
@@ -113,19 +115,12 @@ end
 #################################
 # Velasco-Quiroz-Diaz-Algorithm #
 #################################
-# A function to compute the U-statistic from Equation (3)
-function S_statistic(data::Array{Float64,2})
-    m = size(data,2)
-    dist = pairwise(CosineDist(), data)
-    dist = (acos.((-1) .* (dist .- 1)) .- (pi/2))
-    dot(dist, dist) / (2 * binomial(m,2))
-end
 # Main function to compute the estimate of the dimension
 # It is the algorithm from Sec. 2.1
-function DQV_Estimator(data::Array{Float64,2}, x::Vector{Float64})
-    m = size(data, 2)
-    data_x = data - repmat(x', m)'
-    S = S_statistic(data_x)
+function DQV_Estimator(dist::Array{Float64,2})
+    # Compute the U-statistic from Equation (3)
+    m = size(dist,1)
+    S = dot(dist, dist) / (2 * binomial(m,2))
 
     # Now we have to compute the variances β from Lemma 2.5
     # Ininitialize the βs.
@@ -163,10 +158,14 @@ function DQV_Estimator(data::Array{Float64,2}, x::Vector{Float64})
 end
 function EstimateDimensionANOVA(data::Array{Float64,2}, x::Vector{Float64}, ϵ_array::Vector{Float64})
     dist = pairwise(Euclidean(), data, reshape(x,length(x),1))
+    m = size(data, 2)
+    data_x = data - repmat(x', m)'
+    cos_dist = pairwise(CosineDist(), data_x)
+    cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
     return map(ϵ_array) do ϵ
         index = find(dist .< ϵ)
             if length(index) > 0
-                return DQV_Estimator(data[:,index], x)
+                return DQV_Estimator(cos_dist[index,index])
             else
                 return 0
             end
@@ -175,23 +174,49 @@ end
 function EstimateDimensionANOVA(data::Array{Float64,2}, ϵ_array::Vector{Float64})
         m = size(data, 2)
         dist = pairwise(Euclidean(), data)
-        estimators = map(ϵ_array) do ϵ
-                estimator = zeros(Float64, m, 2)
-                for i = 1:m
-                    index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
-                    k = length(index)
+        estimators = map(1:m) do i
+            x = vec(data[:,i])
+            data_x = data[:,[1:i-1;i+1:m]] - repmat(x', m-1)'
+            cos_dist = pairwise(CosineDist(), data_x)
+            cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
+            return map(ϵ_array) do ϵ
+                index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
+                k = length(index)
                     if k > 1
-                        data_i = data[:,[1:i-1;i+1:m]]
-                        estimator[i,:] = [DQV_Estimator(data_i[:,index], data[:,i]) * k, k]
+                        return [DQV_Estimator(cos_dist[index,index]) * k, k]
                     else
-                        estimator[i,:] = [0.0, 0]
+                        return [0, 0]
                     end
                 end
-                return estimator
             end
 
+        estimators = map(1:length(ϵ_array)) do i
+            return [map(entry -> entry[i][1], estimators), map(entry -> entry[i][2], estimators)]
+        end
 
-        return map(estimators) do entry
-            return sum(entry[:,1]) / sum(entry[:,2])
+        return map(1:length(ϵ_array)) do i
+            sum(estimators[i][1]) / sum(estimators[i][2])
         end
 end
+
+        # m = size(data, 2)
+        # dist = pairwise(Euclidean(), data)
+        # estimators = map(ϵ_array) do ϵ
+        #         estimator = zeros(Float64, m, 2)
+        #         for i = 1:m
+        #             index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
+        #             k = length(index)
+        #             if k > 1
+        #                 data_i = data[:,[1:i-1;i+1:m]]
+        #                 estimator[i,:] = [DQV_Estimator(data_i[:,index], data[:,i]) * k, k]
+        #             else
+        #                 estimator[i,:] = [0.0, 0]
+        #             end
+        #         end
+        #         return estimator
+        #     end
+        #
+        #
+        # return map(estimators) do entry
+        #     return sum(entry[:,1]) / sum(entry[:,2])
+        # end
