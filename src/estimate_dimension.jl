@@ -4,11 +4,6 @@
 
 export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
-import Clustering: hclust, cutree
-import Distances: pairwise, Euclidean, CosineDist
-using Plots
-
-
 ######################
 # Dimension Diagrams #
 ######################

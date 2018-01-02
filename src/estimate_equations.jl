@@ -3,13 +3,6 @@
 #############################
 export MultivariateVandermondeMatrix, FindEquations, get_equations
 
-import FixedPolynomials
-const FP = FixedPolynomials
-import MultivariatePolynomials
-import DynamicPolynomials: @polyvar
-import RowEchelon: rref
-import Combinatorics: multiexponents
-
 
 # Main wrapper
 function FindEquations(point_sample::Array{T}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
