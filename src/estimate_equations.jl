@@ -1,19 +1,19 @@
 #############################
 # Algorithms from Section 3 #
 #############################
-export MultivariateVandermondeMatrix, FindEquations, get_equations
+export MultivariateVandermondeMatrix, FindEquations
 
 
 # Main wrapper
 function FindEquations(point_sample::Array{T}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
     M=MultivariateVandermondeMatrix(point_sample, exponents)
-    get_equations(M,alg)
+    FindEquations(M,alg)
 end
 function FindEquations(point_sample::Array{T}, alg::Symbol; degree = 0, homogeneous_equations=false) where  {T<:Number}
     @assert typeof(degree) == Int "The degree must be of type Int."
     @assert degree > 0 "The degree must be a positive integer."
     M=MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
-    get_equations(M, alg)
+    FindEquations(M, alg)
 end
 
 # MultivariateVandermondeMatrix struct
@@ -132,12 +132,29 @@ function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
 end
 
 # function that gets the equations from a MultivariateVandermondeMatrix
-function get_equations(M::MultivariateVandermondeMatrix, alg::Symbol)
+function FindEquations(M::MultivariateVandermondeMatrix, alg::Symbol)
     m, N = size(M.Vandermonde)
     SVD = svdfact(M.Vandermonde, thin = false)
-    tol = max(m,N) * maximum(SVD.S) * eps(eltype(SVD.S))
+    tol = max(m,N) * maximum(SVD.S) * eps(Float64)
 
     if alg == :with_svd
+        rk = sum(SVD.S .> tol)
+        return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents)
+    elseif alg == :with_qr
+        return Polynomials_from_coefficients(with_qr(M, tol), M.exponents)
+    elseif alg == :with_rref
+        return Polynomials_from_coefficients(with_rref(M, tol), M.exponents)
+    else
+        println("Method $(alg) not known.")
+    end
+
+end
+
+function FindEquations(M::MultivariateVandermondeMatrix, alg::Symbol, tol::Float64)
+
+    if alg == :with_svd
+        m, N = size(M.Vandermonde)
+        SVD = svdfact(M.Vandermonde, thin = false)
         rk = sum(SVD.S .> tol)
         return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents)
     elseif alg == :with_qr
