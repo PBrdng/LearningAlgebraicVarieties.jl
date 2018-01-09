@@ -79,7 +79,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
             non_zero_coeffs = find(x -> abs(x) > tol, kernel[:,i])
             if length(non_zero_coeffs) > 0
                 monomial = map(c -> prod(map(i -> x_[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
-                return dot(kernel[non_zero_coeffs,i], monomial)
+                return transpose(kernel[non_zero_coeffs,i]) * monomial
             else
                 return 0.0*x[1]
             end
