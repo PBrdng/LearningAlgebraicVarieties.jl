@@ -8,7 +8,7 @@ module LearningAlgebraicVarieties
     import RowEchelon: rref
     import Clustering: hclust, cutree
     import Distances: pairwise, Euclidean, CosineDist
-    import Plots
+    using Plots
 
 
     include("estimate_equations.jl")

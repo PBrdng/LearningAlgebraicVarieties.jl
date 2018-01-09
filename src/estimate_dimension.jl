@@ -14,7 +14,7 @@ function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S};
     ϵ = Array(linspace(limits[1], limits[2], eps_ticks))
 
     n = size(data,1)
-    Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=3, xaxis = ("epsilon", font(20)), yaxis = ("d(epsilon)", font(18)))
+    plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=3, xaxis = ("epsilon", font(20)), yaxis = ("d(epsilon)", font(18)))
     ylims!(0,n+1)
 end
 
