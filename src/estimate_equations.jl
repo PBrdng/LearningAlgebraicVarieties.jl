@@ -108,7 +108,7 @@ function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
 end
 
 function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
-    R = rref(M.Vandermonde)
+    R = RowEchelon.rref(M.Vandermonde)
     n,m = size(R)
     R = R[find([norm(R[i,:]) for i in 1:n] .> m * tol),:]
     rk = size(R,1)
