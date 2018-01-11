@@ -5,11 +5,10 @@ module LearningAlgebraicVarieties
     const FP = FixedPolynomials
     import MultivariatePolynomials
     import DynamicPolynomials: @polyvar
-    import RowEchelon: rref
-    import Clustering: hclust, cutree
-    import Distances: pairwise, Euclidean, CosineDist
-    using Plots
-
+    import RowEchelon
+    import Clustering
+    import Distances
+    import Plots
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
