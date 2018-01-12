@@ -7,20 +7,17 @@ export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateD
 ######################
 # Dimension Diagrams #
 ######################
-function DimensionDiagram(data::Array{T,2}, method::Function, limits::Vector{S}; eps_ticks = 100) where {S,T <: Number}
-    @assert length(limits) == 2 "The limits must have two entries."
+function DimensionDiagram(data::Array{T,2}, method::Function, limit1::Number, limit2::Number; eps_ticks = 100) where {T <: Number}
+    @assert limit1<limit2 "The limits must be ordered."
 
-    sort!(limits)
-    ϵ = Array{Float64}(linspace(limits[1], limits[2], eps_ticks))
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
 
     n = size(data,1)
-    try
-        Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=3, xaxis = ("epsilon"), yaxis = ("d(epsilon)"))
-        Plots.ylims!(0,n+1)
-    catch
-        Plots.plot(ϵ, method(data, ϵ), title=string(method), legend=false, lw=3, xaxis = ("epsilon"), yaxis = ("d(epsilon)"))
-        Plots.ylims!(0,n+1)
-    end
+
+
+    Plots.plot(ϵ, method(data, ϵ), title=string(method), lw=3, legend=false, xlabel = "ϵ", ylabel = "d(ϵ)", guidefont = Plots.font(18), tickfont = Plots.font(18))
+    Plots.ylims!(0,n+1)
+    Plots.xlims!(0,limit2+0.1)
 end
 
 
@@ -50,9 +47,8 @@ function EstimateDimensionNPCA(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T
     end
 end
 
-function EstimateDimensionNPCA(data::Array{T,2}, limits::Vector{S}; eps_ticks = 100) where {S,T<:Number}
-    sort!(limits)
-    ϵ = Array{Float64}(linspace(limits[1], limits[2], eps_ticks))
+function EstimateDimensionNPCA(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
     EstimateDimensionNPCA(data, ϵ)
 end
 
@@ -74,9 +70,8 @@ function EstimateDimensionCorrSum(data::Array{T,2}, ϵ_array::Vector{S}) where {
         end
     end
 end
-function EstimateDimensionCorrSum(data::Array{T,2}, limits::Vector{S}; eps_ticks = 100) where {S,T<:Number}
-    sort!(limits)
-    ϵ = Array{Float64}(linspace(limits[1], limits[2], eps_ticks))
+function EstimateDimensionCorrSum(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
     EstimateDimensionCorrSum(data, ϵ)
 end
 
@@ -120,9 +115,8 @@ function EstimateDimensionMLE(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<
         return sum(entry[:,1]) / sum(entry[:,2])
     end
 end
-function EstimateDimensionMLE(data::Array{T,2}, limits::Vector{S}; eps_ticks = 100) where {S,T<:Number}
-    sort!(limits)
-    ϵ = Array{Float64}(linspace(limits[1], limits[2], eps_ticks))
+function EstimateDimensionMLE(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
     EstimateDimensionMLE(data, ϵ)
 end
 
@@ -176,7 +170,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, x::Vector{S}, ϵ_array::Vector
     data_x = data - repmat(x', m)'
     cos_dist = Distances.pairwise(Distances.CosineDist(), data_x)
     cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
-    return map(ϵ_array) do ϵ
+    return pmap(ϵ_array) do ϵ
         index = find(dist .< ϵ)
             if length(index) > 0
                 return DQV_Estimator(cos_dist[index,index])
@@ -193,7 +187,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}) where {T,
             data_x = data[:,[1:i-1;i+1:m]] - repmat(x', m-1)'
             cos_dist = Distances.pairwise(Distances.CosineDist(), data_x)
             cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
-            return map(ϵ_array) do ϵ
+            return pmap(ϵ_array) do ϵ
                 index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                 k = length(index)
                     if k > 1
@@ -212,8 +206,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}) where {T,
             sum(estimators[i][1]) / sum(estimators[i][2])
         end
 end
-function EstimateDimensionANOVA(data::Array{T,2}, limits::Vector{S}; eps_ticks = 100) where {S,T<:Number}
-    sort!(limits)
-    ϵ = Array{Float64}(linspace(limits[1], limits[2], eps_ticks))
+function EstimateDimensionANOVA(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
     EstimateDimensionANOVA(data, ϵ)
 end
