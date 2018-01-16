@@ -5,14 +5,13 @@ export MultivariateVandermondeMatrix, FindEquations
 
 
 # Main wrapper
-function FindEquations(point_sample::Array{T}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
-    M=MultivariateVandermondeMatrix(point_sample, exponents)
+function FindEquations(point_sample::Array{T,2}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
+    M = MultivariateVandermondeMatrix(point_sample, exponents)
     FindEquations(M,alg)
 end
-function FindEquations(point_sample::Array{T}, alg::Symbol; degree = 0, homogeneous_equations=false) where  {T<:Number}
-    @assert typeof(degree) == Int "The degree must be of type Int."
-    @assert degree > 0 "The degree must be a positive integer."
-    M=MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
+function FindEquations(point_sample::Array{T,2}, alg::Symbol, degree::Int64, homogeneous_equations::Bool) where  {T<:Number}
+    @assert degree > 0 "The degree must be positive."
+    M = MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
     FindEquations(M, alg)
 end
 
@@ -87,9 +86,20 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
     end
 end
 
+function with_qr(M::MultivariateVandermondeMatrix)
+    R = qrfact(M.Vandermonde)[:R]
+    m, N = size(R)
+    SVD = svdfact(R, thin = false)
+    tol = max(m,N) * maximum(SVD.S) * eps(Float64)
+    return kernel_qr(R, tol)
+end
 
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
     R = qrfact(M.Vandermonde)[:R]
+    return kernel_qr(R, tol)
+end
+
+function kernel_qr(R::Array{T,2}, tol::Float64) where {T <: Number}
     n,m = size(R)
 
     @assert n > m-1 "Not enough data points. Use SVD instead."
@@ -107,8 +117,18 @@ function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
     return transpose(kernel)
 end
 
+function with_rref(M::MultivariateVandermondeMatrix)
+    R = RowEchelon.rref(M.Vandermonde)
+    m, N = size(R)
+    SVD = svdfact(R, thin = false)
+    tol = max(m,N) * maximum(SVD.S) * eps(Float64)
+    return kernel_rref(R, tol)
+end
 function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
     R = RowEchelon.rref(M.Vandermonde)
+    return kernel_rref(R, tol)
+end
+function kernel_rref(R::Array{T,2}, tol::Float64) where {T <: Number}
     n,m = size(R)
     R = R[find([norm(R[i,:]) for i in 1:n] .> m * tol),:]
     rk = size(R,1)
@@ -127,23 +147,22 @@ function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
             kernel[i, index[j,2]] = - R[index[j,1],pivots[i]]
         end
     end
-
     return transpose(kernel)
 end
 
 # function that gets the equations from a MultivariateVandermondeMatrix
 function FindEquations(M::MultivariateVandermondeMatrix, alg::Symbol)
-    m, N = size(M.Vandermonde)
-    SVD = svdfact(M.Vandermonde, thin = false)
-    tol = max(m,N) * maximum(SVD.S) * eps(Float64)
 
     if alg == :with_svd
+        m, N = size(M.Vandermonde)
+        SVD = svdfact(M.Vandermonde, thin = false)
+        tol = max(m,N) * maximum(SVD.S) * eps(Float64)
         rk = sum(SVD.S .> tol)
         return Polynomials_from_coefficients(SVD.Vt[rk + 1:end,:]', M.exponents)
     elseif alg == :with_qr
-        return Polynomials_from_coefficients(with_qr(M, tol), M.exponents)
+        return Polynomials_from_coefficients(with_qr(M), M.exponents)
     elseif alg == :with_rref
-        return Polynomials_from_coefficients(with_rref(M, tol), M.exponents)
+        return Polynomials_from_coefficients(with_rref(M), M.exponents)
     else
         println("Method $(alg) not known.")
     end
