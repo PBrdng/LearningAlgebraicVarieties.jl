@@ -8,7 +8,7 @@ module LearningAlgebraicVarieties
     import RowEchelon
     import Clustering
     import Distances
-    import Plots
+    import PlotlyJS
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")

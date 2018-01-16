@@ -2,22 +2,36 @@
 # Algorithms from Section 3 #
 #############################
 
-export DimensionDiagram, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
+export DimensionDiagrams, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 ######################
 # Dimension Diagrams #
 ######################
-function DimensionDiagram(data::Array{T,2}, method::Function, limit1::Number, limit2::Number; eps_ticks = 100) where {T <: Number}
+function DimensionDiagrams(
+    data::Array{T,2},
+    limit1::Number,
+    limit2::Number;
+    methods  = [:NPCA, :CorrSum, :MLE, :ANOVA],
+    eps_ticks = 100,
+    fontsize = 12,
+    lw = 2,
+    ) where {T <: Number}
+
     @assert limit1<limit2 "The limits must be ordered."
 
     ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
 
     n = size(data,1)
 
+    trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw) for m in methods]
+    layout = PlotlyJS.Layout(;
+    xaxis = PlotlyJS.attr(range = [0, limit2+0.1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
+    yaxis = PlotlyJS.attr(range = [0,n+1], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
 
-    Plots.plot(ϵ, method(data, ϵ), title=string(method), lw=3, legend=false, xlabel = "ϵ", ylabel = "d(ϵ)", guidefont = Plots.font(18), tickfont = Plots.font(18))
-    Plots.ylims!(0,n+1)
-    Plots.xlims!(0,limit2+0.1)
+    PlotlyJS.plot(trace, layout)
+    # Plots.plot(ϵ, method(data, ϵ), title=string(method), lw=3, legend=false, xlabel = , ylabel = , guidefont = Plots.font(18), tickfont = Plots.font(18))
+    # Plots.ylims!(0,n+1)
+    # Plots.xlims!(0,limit2+0.1)
 end
 
 
