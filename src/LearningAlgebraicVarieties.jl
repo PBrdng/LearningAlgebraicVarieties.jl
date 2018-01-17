@@ -4,11 +4,12 @@ module LearningAlgebraicVarieties
     import FixedPolynomials
     const FP = FixedPolynomials
     import MultivariatePolynomials
+    const MP = MultivariatePolynomials
     import DynamicPolynomials: @polyvar
     import RowEchelon
     import Clustering
     import Distances
-    import Plots
+    import PlotlyJS
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
