@@ -4,6 +4,7 @@ module LearningAlgebraicVarieties
     import FixedPolynomials
     const FP = FixedPolynomials
     import MultivariatePolynomials
+    const MP = MultivariatePolynomials
     import DynamicPolynomials: @polyvar
     import RowEchelon
     import Clustering
