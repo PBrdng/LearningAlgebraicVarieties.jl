@@ -11,7 +11,7 @@ function DimensionDiagrams(
     data::Array{T,2},
     limit1::Number,
     limit2::Number;
-    methods  = [:NPCA, :CorrSum, :MLE, :ANOVA],
+    methods  = [:CorrSum, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 14,
     lw = 3,
@@ -24,7 +24,7 @@ function DimensionDiagrams(
     n = size(data,1)
 
     cols = Colors.colormap("RdBu", mid = 0.5)
-    colors = Dict("CorrSum" => cols[10], "BoxCouting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[80], "ANOVA" => cols[100])
+    colors = Dict("CorrSum" => cols[10], "BoxCounting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[80], "ANOVA" => cols[100])
 
     trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw, line_color = colors["$m"]) for m in methods]
     layout = PlotlyJS.Layout(;
