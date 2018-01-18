@@ -12,9 +12,9 @@ function DimensionDiagrams(
     limit1::Number,
     limit2::Number;
     methods  = [:NPCA, :CorrSum, :MLE, :ANOVA],
-    eps_ticks = 100,
-    fontsize = 12,
-    lw = 2,
+    eps_ticks = 25,
+    fontsize = 14,
+    lw = 3,
     ) where {T <: Number}
 
     @assert limit1<limit2 "The limits must be ordered."
@@ -23,7 +23,10 @@ function DimensionDiagrams(
 
     n = size(data,1)
 
-    trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw) for m in methods]
+    cols = Colors.colormap("RdBu", mid = 0.5)
+    colors = Dict("CorrSum" => cols[10], "BoxCouting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[80], "ANOVA" => cols[100])
+
+    trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw, line_color = colors["$m"]) for m in methods]
     layout = PlotlyJS.Layout(;
     xaxis = PlotlyJS.attr(range = [0, limit2+0.1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
     yaxis = PlotlyJS.attr(range = [0,n+1], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
@@ -39,6 +42,7 @@ end
 # PCA #
 #################
 function EstimateDimensionPCA(data::Array{T,2}, ϵ::Number) where {T <: Number}
+    data = data .- mean.([data[i,:] for i in 1:size(data,1)])
     return sum(svdvals(data) .> ϵ)
 end
 

@@ -10,6 +10,7 @@ module LearningAlgebraicVarieties
     import Clustering
     import Distances
     import PlotlyJS
+    import Colors
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
