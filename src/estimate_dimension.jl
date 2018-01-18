@@ -11,7 +11,7 @@ function DimensionDiagrams(
     data::Array{T,2},
     limit1::Number,
     limit2::Number;
-    methods  = [:NPCA, :CorrSum, :MLE, :ANOVA],
+    methods  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 14,
     lw = 3,
@@ -24,19 +24,38 @@ function DimensionDiagrams(
     n = size(data,1)
 
     cols = Colors.colormap("RdBu", mid = 0.5)
-    colors = Dict("CorrSum" => cols[10], "BoxCouting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[80], "ANOVA" => cols[100])
+    colors = Dict("CorrSum" => cols[10], "BoxCounting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[75], "ANOVA" => cols[90])
 
     trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw, line_color = colors["$m"]) for m in methods]
     layout = PlotlyJS.Layout(;
     xaxis = PlotlyJS.attr(range = [0, limit2+0.1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
-    yaxis = PlotlyJS.attr(range = [0,n+1], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
+    yaxis = PlotlyJS.attr(range = [0,n+0.1], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
 
     PlotlyJS.plot(trace, layout)
     # Plots.plot(ϵ, method(data, ϵ), title=string(method), lw=3, legend=false, xlabel = , ylabel = , guidefont = Plots.font(18), tickfont = Plots.font(18))
     # Plots.ylims!(0,n+1)
     # Plots.xlims!(0,limit2+0.1)
 end
+function DimensionDiagrams(
+    data::Array{T,2};
+    methods  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
+    eps_ticks = 25,
+    fontsize = 14,
+    lw = 3,
+    ) where {T <: Number}
 
+D = Distances.pairwise(Distances.Euclidean(), data)
+limit1 = minimum(D[D.>0.0])
+limit2 = maximum(D)
+
+DimensionDiagrams(data,
+                limit1,
+                limit2,
+                methods = methods,
+                eps_ticks = eps_ticks,
+                fontsize = fontsize,
+                lw = lw)
+end
 
 #################
 # PCA #
@@ -91,6 +110,40 @@ end
 function EstimateDimensionCorrSum(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
     ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
     EstimateDimensionCorrSum(data, ϵ)
+end
+
+##########################
+# Box Counting Dimension #
+##########################
+function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<:Number}
+    n = size(data, 1)
+    m = size(data, 2)
+
+    u_min = minimum.([data[i,:] for i in 1:n])
+    u_max = maximum.([data[i,:] for i in 1:n])
+
+    return map(ϵ_array) do ϵ
+        u = minimum(u_max - u_min)
+        R = ceil(Int64, u/ϵ)
+        
+        if R == 1
+            return NaN
+        else
+            ϵs = ϵ .* (u_max - u_min)./u
+            ν = Dict()
+            for j = 1:m
+                if !haskey(ν, string(floor.(Int64, (data[:,j]- u_min)./ϵs).+1))
+                    ν[string(floor.(Int64, (data[:,j]- u_min)./ϵs).+1)] = true
+                end
+            end
+
+            return log(length(ν))/abs(log(R))
+        end
+    end
+end
+function EstimateDimensionBoxCounting(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
+    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
+    EstimateDimensionBoxCounting(data, ϵ)
 end
 
 ###########################

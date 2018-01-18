@@ -130,7 +130,7 @@ function with_rref(M::MultivariateVandermondeMatrix, tol::Float64)
 end
 function kernel_rref(R::Array{T,2}, tol::Float64) where {T <: Number}
     n,m = size(R)
-    R = R[find([norm(R[i,:]) for i in 1:n] .> m * tol),:]
+    R = R[find([norm(R[i,:]) for i in 1:n] .> sqrt(m) * tol),:]
     rk = size(R,1)
     index = zeros(Int64, rk, 2)
     for i = 1:rk
