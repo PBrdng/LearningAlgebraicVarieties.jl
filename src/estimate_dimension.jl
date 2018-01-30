@@ -144,7 +144,7 @@ function EstimateDimensionCorrSum(data::Array{T,2}, ϵ_array::Vector{S}, project
         output = abs.(diff(output) ./ diff(log.(ϵ_array)))
         return [0.0; output]
     else
-        output = abs.(diff(output) ./ diff(log.(sin.(ϵ_array) ./ sin(1))))
+        output = abs.(diff(output) ./ diff(log.(sin.(ϵ_array))))
         return [0.0; output]
     end
 end
