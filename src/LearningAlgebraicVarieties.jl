@@ -8,11 +8,10 @@ module LearningAlgebraicVarieties
     import DynamicPolynomials: @polyvar
     import RowEchelon
     import Clustering
-    import Distances
     import PlotlyJS
     import Colors
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
-    include("multiexponents.jl")
+    include("auxiliary_functions.jl")
 end

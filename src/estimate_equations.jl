@@ -102,7 +102,7 @@ end
 function kernel_qr(R::Array{T,2}, tol::Float64) where {T <: Number}
     n,m = size(R)
 
-    @assert n > m-1 "Not enough data points. Use SVD instead."
+    # @assert n > m-1 "Not enough data points. Use SVD instead."
 
     index = find(x -> abs(x) < tol, [R[i,i] for i in 1:m])
     index2 = setdiff([i for i in 1:m], index)
