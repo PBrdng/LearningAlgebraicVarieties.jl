@@ -1,4 +1,4 @@
-export ScaledEuclidean, ScaledFubiniStudy, multiexponents
+export ScaledEuclidean, ScaledFubiniStudy, multiexponents, barcode_plot
 
 """
 
@@ -232,3 +232,68 @@ end
 #         return SVD.U[:,1:n-1]' * data
 #     end
 # end
+
+function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol, how_many_bars::Array{Int64,1}; lw=10, upper_limit = Inf, fontsize = 16)
+
+        @assert length(dims) == length(how_many_bars) "Number of dimensions (was $(length(dims))) must be the same as the number of values specifying the number of bars that should be displayed for each dimension  (was $(length(how_many_bars)))."
+
+        # colors = Colors.distinguishable_colors(length(dims)+1,[RGB(1,1,1)])[2:end]
+        cols = Colors.colormap("Blues", mid = 0.5)
+        range = Int.(round.(collect(linspace(50,100,length(dims)+1))))
+        colors = map(r -> cols[r], range)
+
+        B = [Eirene.barcode(C, dim = d) for d in dims]
+        if upper_limit == Inf
+            upper_limit = 2 * maximum([maximum(b[b.< Inf]) for b in B])
+        end
+
+        traces = map(1:length(B)) do j
+             b = B[j]
+             # lengths = b[:,2]-b[:,1]
+             # b = b[lengths .> tol[j],:]
+             if size(b,1) == 0
+                 return [PlotlyJS.scatter(;x=[0,0], y=[0,0], mode="lines",  line_width = lw, line_color = colors[j], name = "dimension $(dims[j])")]
+             end
+
+             l = minimum([size(b,1), how_many_bars[j]])
+             s = sortperm(b[:,2]-b[:,1])
+             b = b[s[end-l+1:end],:]
+
+             i = find(x->x==Inf, b[:,2])
+             b[i,2] .= upper_limit
+
+             if sorted_by == :length
+             elseif sorted_by == :lower_limit
+                s = sortperm(b[:,1])
+                b = b[s,:]
+             else
+                println("The second argument must be either :length or :lower_limit.")
+                return 0
+             end
+             return [PlotlyJS.scatter(;x=b[1,:], y=[1,1], mode="lines",  line_width = lw, line_color = colors[j], name = "Dimension $(dims[j])");
+             [PlotlyJS.scatter(;x=b[i,:], y=[i,i], mode="lines",  line_width = lw, line_color = colors[j], showlegend=false) for i in 2:l]]
+
+         end
+
+         for i = 2:length(traces)
+             for j = 1:length(traces[i])
+                 traces[i][j][:y] = traces[i][j][:y] + traces[i-1][end][:y] + 1
+             end
+         end
+         traces = vcat(traces...)
+
+
+         x = maximum(vcat([t[:x] for t in traces]...))
+         y = maximum(vcat([t[:y] for t in traces]...))
+
+         layout = PlotlyJS.Layout(;
+         xaxis = attr(range = [-.001, upper_limit+0.001], showgrid=false, zeroline =false, title = "ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
+         yaxis = attr(range = [0,y+1.1], showgrid=false, ticks = false, titlefont_size=fontsize, tickfont_size=fontsize),
+         legend=attr(font_size=fontsize)
+         )
+         PlotlyJS.Plot(traces[end:-1:1], layout)
+end
+function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol; lw=2)
+    l = size(C["inputdata"]["distmat"],1)
+    barcode_plot(C,dims, sorted_by, l .* ones(Int64,length(dims)), lw=lw)
+end

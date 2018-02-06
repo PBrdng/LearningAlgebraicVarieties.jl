@@ -356,11 +356,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}, projectiv
             data_x = data[:,[1:i-1;i+1:m]] .- data[:,i]
             cos_dist = FubiniStudyDistances(data_x)
             return pmap(ϵ_array) do ϵ
-                if !projective
-                    index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
-                else
-                    index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
-                end
+                index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                 k = length(index)
                     if k > 1
                         return [DQV_Estimator(cos_dist[index,index]) * k, k]
@@ -390,8 +386,8 @@ end
 function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
 
     if sum(dist .> 0.0) > 0
-        C = eirene(dist, bettimax = 0)
-        B = barcode(C, dim = 0)
+        C = Eirene.eirene(dist, bettimax = 0)
+        B = Eirene.barcode(C, dim = 0)
         m = size(B,1)
 
         if m > 1

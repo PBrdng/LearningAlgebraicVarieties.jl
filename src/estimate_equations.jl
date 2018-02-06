@@ -87,7 +87,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
 end
 
 function with_qr(M::MultivariateVandermondeMatrix)
-    R = qrfact(M.Vandermonde)[:R]
+    R = qr(M.Vandermonde)[2]
     m, N = size(R)
     SVD = svdfact(R, thin = false)
     tol = max(m,N) * maximum(SVD.S) * eps(Float64)
@@ -95,7 +95,7 @@ function with_qr(M::MultivariateVandermondeMatrix)
 end
 
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
-    R = qrfact(M.Vandermonde)[:R]
+    R = qr(M.Vandermonde)[2]
     return kernel_qr(R, tol)
 end
 
