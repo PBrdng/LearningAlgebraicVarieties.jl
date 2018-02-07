@@ -23,8 +23,6 @@ module LearningAlgebraicVarieties
     import Colors
 
 
-
-
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
     include("auxiliary_functions.jl")
