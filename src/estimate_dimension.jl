@@ -1,7 +1,3 @@
-#############################
-# Algorithms from Section 3 #
-#############################
-
 export DimensionDiagrams, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
 
 ######################
@@ -299,8 +295,8 @@ end
     # Compute the U-statistic from Equation (3)
     m = size(dist,1)
     v = vec(dist) .- pi/2
-    S = Ac_mul_B(v, v)
-    S = S / (2 * binomial(m,2))
+    S = dot(v, v)
+    S /= (2 * binomial(m,2))
 
     # Now we have to compute the variances β from Lemma 2.5
     # Ininitialize the βs.
@@ -336,27 +332,30 @@ end
         return 2 * n_even
     end
 end
-function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}, projective) where {T,S <: Number}
+function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{U}, projective) where {T,U <: Number}
         n = size(data, 1)
         m = size(data, 2)
         dist = zeros(T, m, m)
+        D = zeros(Float64, m, m)
 
         if !projective
             dist = ScaledEuclidean(data)
         else
             data = hcat([normalize(data[:,i]) for i in 1:m]...)
             dist = ScaledFubiniStudy(data)
+            u = zeros(Float64, n, m)
         end
-        estimators = pmap(1:m) do i
+        estimators = map(1:m) do i
             P = zeros(T, n, n)
             if projective
-                u = zeros(T, n, m)
                 P = eye(n) - A_mul_Bc(data[:,i], data[:,i])
-                data_x = A_mul_B!(u, P, data)
+                A_mul_B!(u, P, data)
+                data_x = u[:,[1:i-1;i+1:m]]
+            else
+                data_x = data[:,[1:i-1;i+1:m]] .- data[:,i]
             end
-            data_x = data[:,[1:i-1;i+1:m]] .- data[:,i]
-            cos_dist = FubiniStudyDistances(data_x)
-            return pmap(ϵ_array) do ϵ
+            cos_dist = FubiniStudyDistances!(D, data_x)
+            return map(ϵ_array) do ϵ
                 index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                 k = length(index)
                     if k > 1
@@ -364,8 +363,8 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}, projectiv
                     else
                         return [0, 0]
                     end
-                end
             end
+        end
 
         estimators = map(1:length(ϵ_array)) do i
             return [map(entry -> entry[i][1], estimators), map(entry -> entry[i][2], estimators)]

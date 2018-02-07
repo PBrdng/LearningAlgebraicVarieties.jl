@@ -1,4 +1,4 @@
-export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, multiexponents, barcode_plot
+export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot
 
 """
 
@@ -142,10 +142,10 @@ Returns the pairwise Fubini-Study distance of the of the columns of data.
 
 """
 function FubiniStudyDistances(data::Array{T,2}) where {T<:Number}
-    n = size(data, 2)
-    norms = [norm(data[:,i]) for i in 1:n]
+    m = size(data, 2)
+    norms = [norm(data[:,i]) for i in 1:m]
 
-    D = map(CartesianRange((n,n))) do i
+    D = map(CartesianRange((m,m))) do i
         if i[1] < i[2]
             p = abs(Ac_mul_B(data[:,i[1]], data[:,i[2]]) / (norms[i[1]] * norms[i[2]]))
             if p > 1
@@ -157,6 +157,23 @@ function FubiniStudyDistances(data::Array{T,2}) where {T<:Number}
         end
     end
     return D+transpose(D)
+end
+function FubiniStudyDistances!(u::Array{T,2}, data::Array{S,2}) where {T,S<:Number}
+    m = size(data, 2)
+    norms = [norm(data[:,i]) for i in 1:m]
+
+    for i in CartesianRange((m,m))
+        if i[1] < i[2]
+            p = abs(Ac_mul_B(data[:,i[1]], data[:,i[2]]) / (norms[i[1]] * norms[i[2]]))
+            if p > 1
+                p = 1.0
+            end
+            view(u, i[1], i[2]) .= acos(p)
+        else
+            view(u, i[1], i[2]) .= 0.0
+        end
+    end
+    return u+transpose(u)
 end
 """
 ScaledFubiniStudy(data::Array{T,2})
