@@ -1,5 +1,4 @@
 module LearningAlgebraicVarieties
-
     import Base: start, next, done, length, eltype
     import FixedPolynomials
     const FP = FixedPolynomials

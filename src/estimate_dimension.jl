@@ -165,6 +165,7 @@ function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}, pro
         dist= EuclideanDistances(data)
         M = maximum(dist)
         scale!(dist, inv(M))
+        data = convert(Array{promote_type(T, Float64),2}, data)
         scale!(data, inv(M))
 
         u_min = minimum.([data[i,:] for i in 1:n])
@@ -386,7 +387,7 @@ end
 function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
 
     if sum(dist .> 0.0) > 0
-        C = Eirene.eirene(dist, bettimax = 0)
+        C = Eirene.eirene(dist, maxdim = 0)
         B = Eirene.barcode(C, dim = 0)
         m = size(B,1)
 

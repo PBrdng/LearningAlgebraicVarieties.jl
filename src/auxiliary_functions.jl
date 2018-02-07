@@ -1,4 +1,4 @@
-export ScaledEuclidean, ScaledFubiniStudy, multiexponents, barcode_plot
+export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, multiexponents, barcode_plot
 
 """
 
@@ -49,13 +49,13 @@ function combinations(a, t::Integer)
 end
 
 
-"""
+###
 
-This is source code from
+#This is source code from
 
-https://github.com/JuliaMath/Combinatorics.jl/blob/master/src/multinomials.jl
+#https://github.com/JuliaMath/Combinatorics.jl/blob/master/src/multinomials.jl
 
-"""
+###
 
 immutable MultiExponents{T}
     c::Combinations{T}
@@ -84,7 +84,13 @@ done(m::MultiExponents, s) = done(m.c, s)
 length(m::MultiExponents) = length(m.c)
 
 """
-    multiexponents(m, n)
+
+multiexponents(m, n)
+
+This is code from
+
+https://github.com/JuliaMath/Combinatorics.jl/blob/master/src/multinomials.jl
+
 Returns the exponents in the multinomial expansion (x₁ + x₂ + ... + xₘ)ⁿ.
 For example, the expansion (x₁ + x₂ + x₃)² = x₁² + x₁x₂ + x₁x₃ + ...
 has the exponents:
@@ -106,6 +112,8 @@ end
 
 
 """
+
+EuclideanDistances(data::Array{T,2})
 
 Returns the pairwise euclidean distances of the columns of data, and scales them, such that the maximal pairwise distances is 1.
 
@@ -129,6 +137,7 @@ function ScaledEuclidean(data::Array{T,2}) where {T<:Number}
 end
 """
 
+FubiniStudyDistances(data::Array{T,2})
 Returns the pairwise Fubini-Study distance of the of the columns of data.
 
 """
@@ -149,14 +158,8 @@ function FubiniStudyDistances(data::Array{T,2}) where {T<:Number}
     end
     return D+transpose(D)
 end
-function FubiniStudyDistance(x::Array{T,1}, y::Array{S,1}) where {T,S<:Number}
-    p = abs(Ac_mul_B(x, y) / (norm(x) * norm(y)))
-    if p > 1
-        p = 1.0
-    end
-    return acos(p)
-end
 """
+ScaledFubiniStudy(data::Array{T,2})
 
 Returns the pairwise Fubini-Study distance of the columns of data, and scales them, such that the maximal pairwise distances is 1.
 
@@ -171,7 +174,9 @@ end
 
 """
 
-Provides a affine coordinates for the colums of data . The affine patch is safely chosen so that no point lies at infinity.
+SafeDehomogenization(data::Array{T,2})
+
+Provides affine coordinates for the colums of projective data. The affine patch is safely chosen so that no point lies at infinity.
 
 """
 function SafeDehomogenization(data::Array{T,2}) where {T<:Number}
@@ -199,41 +204,20 @@ function SafeDehomogenization(data::Array{T,2}) where {T<:Number}
         return S.U[:,1:n-1]' * data
     end
 end
-#
-# function SafeDehomogenization(data::Array{T,2}, preferred::Array{S,1}) where {T,S<:Number}
-#     n = size(data,1)
-#     m = size(data,2)
-#
-#     normalize!(preferred)
-#     dots = [dot(preferred, data[:,i]) for i in 1:m]
-#     check = true
-#     if sum(dots .== 0) == 0
-#         P = eye(n) - A_mul_Bc(preferred,preferred)
-#         SVD = svdfact!(P)
-#         data = hcat([data[:,i]./dots[i] for i in 1:m]...)
-#
-#         return SVD.U[:,1:n-1]' * data
-#     else
-#         TS = promote_type(T,S)
-#         dots = zeros(TS, m)
-#         u = zeros(TS,n)
-#         check = true
-#         while check
-#                 u = normalize(rand(n))
-#                 dots = [dot(u, data[:,i]) for i in 1:m]
-#                 if sum(dots .== 0) == 0
-#                     check = false
-#                 end
-#             end
-#         P = eye(n) - A_mul_Bc(u,u)
-#         SVD = svdfact!(P)
-#         data = hcat([data[:,i]./dots[i] for i in 1:m]...)
-#
-#         return SVD.U[:,1:n-1]' * data
-#     end
-# end
 
-function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol, how_many_bars::Array{Int64,1}; lw=10, upper_limit = Inf, fontsize = 16)
+"""
+
+barcode_plot(C::Dict{String,Any},
+    dims::Array{Int64,1},
+    how_many_bars::Array{Int64,1};
+    sorted_by::Symbol=:lower_limit,
+    lw=10,
+    upper_limit = Inf,
+    fontsize = 16)
+
+Plots the barcode associated to the dictionary C that was produced by the eirene() function from the Eirene package. dims is an array determining which dimensions should be plotted. how_many_bars is an array that determines how many bars in each dimension are plotted. sorted_by can be either :lower_limit or :length.
+"""
+function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
 
         @assert length(dims) == length(how_many_bars) "Number of dimensions (was $(length(dims))) must be the same as the number of values specifying the number of bars that should be displayed for each dimension  (was $(length(how_many_bars)))."
 
