@@ -359,7 +359,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{U}, projectiv
                 index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                 k = length(index)
                     if k > 1
-                        return [DQV_Estimator( cos_dist[index,index]) * k, k]
+                        return [DQV_Estimator(cos_dist[index,index]) * k, k]
                     else
                         return [0, 0]
                     end
