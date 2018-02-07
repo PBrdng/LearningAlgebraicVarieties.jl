@@ -9,7 +9,14 @@ module LearningAlgebraicVarieties
     import Clustering
     import PlotlyJS
     import Colors
+
+    originalSTDOUT = STDOUT # this is to suppress printing while importing Eirene
+    (outRead, outWrite) = redirect_stdout()
     import Eirene
+    close(outWrite)
+    close(outRead)
+    redirect_stdout(originalSTDOUT)
+
 
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
