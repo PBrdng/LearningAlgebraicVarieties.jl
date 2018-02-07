@@ -87,7 +87,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
 end
 
 function with_qr(M::MultivariateVandermondeMatrix)
-    R = qrfact(M.Vandermonde)[:R]
+    R = qr(M.Vandermonde)[2]
     m, N = size(R)
     SVD = svdfact(R, thin = false)
     tol = max(m,N) * maximum(SVD.S) * eps(Float64)
@@ -95,14 +95,14 @@ function with_qr(M::MultivariateVandermondeMatrix)
 end
 
 function with_qr(M::MultivariateVandermondeMatrix, tol::Float64)
-    R = qrfact(M.Vandermonde)[:R]
+    R = qr(M.Vandermonde)[2]
     return kernel_qr(R, tol)
 end
 
 function kernel_qr(R::Array{T,2}, tol::Float64) where {T <: Number}
     n,m = size(R)
 
-    @assert n > m-1 "Not enough data points. Use SVD instead."
+    # @assert n > m-1 "Not enough data points. Use SVD instead."
 
     index = find(x -> abs(x) < tol, [R[i,i] for i in 1:m])
     index2 = setdiff([i for i in 1:m], index)

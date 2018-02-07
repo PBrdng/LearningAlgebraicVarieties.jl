@@ -9,84 +9,101 @@ export DimensionDiagrams, EstimateDimensionMLE, EstimateDimensionANOVA, Estimate
 ######################
 function DimensionDiagrams(
     data::Array{T,2},
-    limit1::Number,
-    limit2::Number;
-    methods  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
+    projective::Bool;
+    methods  = [:CorrSum, :BoxCounting, :PHCurve, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
-    fontsize = 14,
-    lw = 3,
+    fontsize = 16,
+    lw = 4,
+    log_log = false
     ) where {T <: Number}
-
-    @assert limit1<limit2 "The limits must be ordered."
-
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
 
     n = size(data,1)
 
     cols = Colors.colormap("RdBu", mid = 0.5)
-    colors = Dict("CorrSum" => cols[10], "BoxCounting"=> cols[30], "NPCA" => cols[60], "MLE" => cols[75], "ANOVA" => cols[90])
+    colors = Dict("CorrSum" => cols[10], "BoxCounting"=> cols[25], "PHCurve"=> cols[40], "NPCA" => cols[60], "MLE" => cols[75], "ANOVA" => cols[90])
 
-    trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ)"))), mode="lines", name = string(m), line_width = lw, line_color = colors["$m"]) for m in methods]
-    layout = PlotlyJS.Layout(;
-    xaxis = PlotlyJS.attr(range = [0, limit2+0.1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
-    yaxis = PlotlyJS.attr(range = [0,n+0.1], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+
+    if !projective
+        y_upper = n+0.1
+    else
+        y_upper = n - 1 + 0.1
+    end
+
+    trace = [PlotlyJS.scatter(;x=ϵ, y=eval(parse(string("EstimateDimension",string(m),"($data, $ϵ, $projective)"))), mode="lines", name = string(m), line_width = lw, line_color = colors["$m"]) for m in methods]
+    if !log_log
+        layout = PlotlyJS.Layout(;
+        xaxis = PlotlyJS.attr(range = [0, 1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
+        yaxis = PlotlyJS.attr(range = [0.9,y_upper], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
+    else
+        layout = PlotlyJS.Layout(; xaxis_type = "log",
+        yaxis_type = "log",
+        xaxis_range = [-1, 0],
+        yaxis_range = [0,log10(y_upper)],
+        xaxis = PlotlyJS.attr(title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
+        yaxis = PlotlyJS.attr(title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize,))
+    end
 
     PlotlyJS.plot(trace, layout)
-    # Plots.plot(ϵ, method(data, ϵ), title=string(method), lw=3, legend=false, xlabel = , ylabel = , guidefont = Plots.font(18), tickfont = Plots.font(18))
-    # Plots.ylims!(0,n+1)
-    # Plots.xlims!(0,limit2+0.1)
 end
-function DimensionDiagrams(
-    data::Array{T,2};
-    methods  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
-    eps_ticks = 25,
-    fontsize = 14,
-    lw = 3,
-    ) where {T <: Number}
-
-D = Distances.pairwise(Distances.Euclidean(), data)
-limit1 = minimum(D[D.>0.0])
-limit2 = maximum(D)
-
-DimensionDiagrams(data,
-                limit1,
-                limit2,
-                methods = methods,
-                eps_ticks = eps_ticks,
-                fontsize = fontsize,
-                lw = lw)
-end
+#################
+#################
 
 #################
 # PCA #
 #################
-function EstimateDimensionPCA(data::Array{T,2}, ϵ::Number) where {T <: Number}
-    data = data .- mean.([data[i,:] for i in 1:size(data,1)])
-    return sum(svdvals(data) .> ϵ)
+@inline function EstimateDimensionPCA(data::Array{T,2}, projective::Bool) where {T <: Number}
+    if !projective
+        n = size(data, 1)
+        data = data .- mean.([data[i,:] for i in 1:n])
+    else
+        data = SafeDehomogenization(data)
+        n = size(data, 1)
+        data = data .- mean.([data[i,:] for i in 1:n])
+    end
+    if size(data, 2) > 1
+        i = findmin(diff(log10.(svdvals(data))))
+        # return rank(data)
+        return n - i[2] + 1
+    else
+        return 0
+    end
 end
 
 
 #################
 # Nonlinear PCA #
 #################
-function EstimateDimensionNPCA(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<:Number}
-    dist = Distances.pairwise(Distances.Euclidean(), data)
+function EstimateDimensionNPCA(data::Array{T,2}, ϵ_array::Vector{S}, projective::Bool) where {S,T<:Number}
+
+    if !projective
+        dist = ScaledEuclidean(data)
+    else
+        dist = ScaledFubiniStudy(data)
+    end
+
     H = Clustering.hclust(dist, :single)
     m = size(data,2)
     return map(ϵ_array) do ϵ
+
+        if !projective
+
+        else
+
+        end
+
         myclust = Clustering.cutree(H, h = ϵ)
         groups = unique(myclust)
         r = map(groups) do group
             index = find(myclust .== group)
-            return EstimateDimensionPCA(data[:,index], ϵ) * length(index)
+            return EstimateDimensionPCA(data[:,index], projective) * length(index)
         end
         return sum(r) / m
     end
 end
-
-function EstimateDimensionNPCA(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
-    EstimateDimensionNPCA(data, ϵ)
+function EstimateDimensionNPCA(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+    EstimateDimensionNPCA(data, ϵ, projective)
 end
 
 
@@ -94,87 +111,169 @@ end
 #########################
 # Correlation Dimension #
 #########################
-function EstimateDimensionCorrSum(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<:Number}
-    m = size(data,2)
-    D = Distances.pairwise(Distances.Euclidean(), data)
+function EstimateDimensionCorrSum(data::Array{T,2}, ϵ_array::Vector{S}, projective::Bool) where {S,T<:Number}
+    n = size(data, 1)
+    m = size(data, 2)
+    if !projective
+        dist = ScaledEuclidean(data)
+    else
+        dist = ScaledFubiniStudy(data)
+    end
 
-    return map(ϵ_array) do ϵ
-        count = (sum(D .< ϵ) - m) / 2
-        if count > 0
-            return abs( log(count / (m * (m-1))) / log(ϵ) )
-        else
-            return 0.0
+    if !projective
+        output =  map(ϵ_array) do ϵ
+            count = (sum(dist .<  ϵ) - m) / 2
+            if count > 0
+                return abs( log(count / (m * (m-1))))
+            else
+                return 0.0
+            end
+        end
+    else
+        output =  map(ϵ_array) do ϵ
+            count = (sum(dist .<  ϵ) - m) / 2
+            if count > 0
+                return abs( log(count / (m * (m-1))))
+            else
+                return 0.0
+            end
         end
     end
+
+    if !projective
+        output = abs.(diff(output) ./ diff(log.(ϵ_array)))
+        return [0.0; output]
+    else
+        output = abs.(diff(output) ./ diff(log.(sin.(ϵ_array))))
+        return [0.0; output]
+    end
 end
-function EstimateDimensionCorrSum(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
-    EstimateDimensionCorrSum(data, ϵ)
+function EstimateDimensionCorrSum(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+    EstimateDimensionCorrSum(data, ϵ, projective)
 end
 
 ##########################
 # Box Counting Dimension #
 ##########################
-function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<:Number}
-    n = size(data, 1)
-    m = size(data, 2)
+function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}, projective::Bool) where {S,T<:Number}
 
-    u_min = minimum.([data[i,:] for i in 1:n])
-    u_max = maximum.([data[i,:] for i in 1:n])
+    if !projective
+        n = size(data, 1)
+        m = size(data, 2)
 
-    return map(ϵ_array) do ϵ
-        u = minimum(u_max - u_min)
-        R = ceil(Int64, u/ϵ)
-        
-        if R == 1
-            return NaN
-        else
-            ϵs = ϵ .* (u_max - u_min)./u
-            ν = Dict()
-            for j = 1:m
-                if !haskey(ν, string(floor.(Int64, (data[:,j]- u_min)./ϵs).+1))
-                    ν[string(floor.(Int64, (data[:,j]- u_min)./ϵs).+1)] = true
-                end
+        dist= EuclideanDistances(data)
+        M = maximum(dist)
+        scale!(dist, inv(M))
+        data = convert(Array{promote_type(T, Float64),2}, data)
+        scale!(data, inv(M))
+
+        u_min = minimum.([data[i,:] for i in 1:n])
+        u_max = maximum.([data[i,:] for i in 1:n])
+
+        d = abs.(u_max - u_min)
+        λ = maximum(d) * √(n)
+
+        return map(ϵ_array) do ϵ
+            R = floor(Int64, λ/ϵ + 1)
+            if R == 1
+                return 0.0
+            else
+                qs = [floor.(((abs.(data[:,i] - u_min)) ./ d) .* R) for i in 1:m]
+                return log(length(unique(qs)))/abs(log(R))
             end
+        end
+    else
+        n = size(data, 1)
+        data = SafeDehomogenization(data)
+        n = n-1
+        m = size(data, 2)
+        u_min = minimum.([data[i,:] for i in 1:n])
+        u_max = maximum.([data[i,:] for i in 1:n])
 
-            return log(length(ν))/abs(log(R))
+        #compute spherical angle for the box, not projective
+        d = map(1:n) do i
+            a = [u_min[i]; 1.0]
+            b = [u_max[i]; 1.0]
+            c = Ac_mul_B(a,b) / (norm(a) * norm(b))
+            if abs(c) < 1.0
+                return acos(c)
+            elseif c > 1.0
+                return 0.0
+            else
+                return pi
+            end
+        end
+
+        λ = maximum(d)
+
+        return map(ϵ_array) do ϵ
+            R = floor(Int64, λ/(pi * ϵ) + 1)
+
+            if R == 1
+                return 0.0
+            else
+                D = map(1:m) do j
+                    return map(1:n) do i
+                        a = [u_min[i]; 1.0]
+                        b = [data[i,j]; 1.0]
+                        c = Ac_mul_B(a,b) / (norm(a) * norm(b))
+                        if abs(c) < 1.0
+                            return acos(c)
+                        elseif c > 1.0
+                            return 0.0
+                        else
+                            return pi
+                        end
+                    end
+                end
+
+                qs = [floor.(( D[i] ./ d) .* R) for i in 1:m]
+                return log(length(unique(qs)))/abs(log(R))
+            end
         end
     end
 end
-function EstimateDimensionBoxCounting(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
-    EstimateDimensionBoxCounting(data, ϵ)
+function EstimateDimensionBoxCounting(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+    EstimateDimensionBoxCounting(data, ϵ, projective)
 end
 
 ###########################
 # Bickel-Levina-Algorithm #
 ###########################
-function BL_MLE(dist::Array{T,1}, ϵ::Number) where {T<:Number}
+@inline function BL_MLE(dist::Array{T,1}, ϵ::Number, projective::Bool) where {T<:Number}
     k = length(dist)
-    return float(abs(inv(sum(log.(ϵ .* inv.(dist))) / k)))
-end
-function EstimateDimensionMLE(data::Array{T,2}, x::Vector{S}, ϵ_array::Vector{U}) where {S,T,U<:Number}
-    dist = Distances.pairwise(Distances.Euclidean(), data, reshape(x,length(x),1))
-    return map(ϵ_array) do ϵ
-        index = find(dist .< ϵ)
-        if length(index) > 1
-            return BL_MLE(dist[index], ϵ)
-        else
-            return 0.0
-        end
+    # return float(abs(inv(sum(log.(maximum(dist) .* inv.(dist))) / k)))
+    if !projective
+        return float(abs(inv(sum(log.(ϵ .* inv.(dist))) / k)))
+
+    else
+        return float(abs(inv(sum(log.(sin(ϵ) .* inv.(sin.(dist)))) / k)))
+
     end
 end
-function EstimateDimensionMLE(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<:Number}
+function EstimateDimensionMLE(data::Array{T,2}, ϵ_array::Vector{S}, projective::Bool) where {S,T<:Number}
     m = size(data, 2)
-    dist = Distances.pairwise(Distances.Euclidean(), data)
+    if !projective
+        dist = ScaledEuclidean(data)
+    else
+        dist = ScaledFubiniStudy(data)
+    end
     estimators = map(ϵ_array) do ϵ
             estimator = zeros(Float64, m, 2)
             for i = 1:m
                 dist_i = dist[i,[1:i-1;i+1:m]]
-                index = find(dist_i .< ϵ)
+
+                if !projective
+                    index = find(dist_i .<  ϵ)
+                else
+                    index = find(dist_i .<  ϵ)
+                end
+
                 k = length(index)
                 if k > 1
-                    estimator[i,:] = [BL_MLE(dist_i[index], ϵ) * k, k]
+                    estimator[i,:] = [BL_MLE(dist_i[index], ϵ, projective) * k, k]
                 else
                     estimator[i,:] = [0.0, 0]
                 end
@@ -186,9 +285,9 @@ function EstimateDimensionMLE(data::Array{T,2}, ϵ_array::Vector{S}) where {S,T<
         return sum(entry[:,1]) / sum(entry[:,2])
     end
 end
-function EstimateDimensionMLE(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
-    EstimateDimensionMLE(data, ϵ)
+function EstimateDimensionMLE(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+    EstimateDimensionMLE(data, ϵ, projective)
 end
 
 #################################
@@ -196,10 +295,12 @@ end
 #################################
 # Main function to compute the estimate of the dimension
 # It is the algorithm from Sec. 2.1
-function DQV_Estimator(dist::Array{T,2}) where {T<:Number}
+@inline function DQV_Estimator(dist::Array{T,2}) where {T<:Number}
     # Compute the U-statistic from Equation (3)
     m = size(dist,1)
-    S = dot(dist, dist) / (2 * binomial(m,2))
+    v = vec(dist) .- pi/2
+    S = Ac_mul_B(v, v)
+    S = S / (2 * binomial(m,2))
 
     # Now we have to compute the variances β from Lemma 2.5
     # Ininitialize the βs.
@@ -235,29 +336,26 @@ function DQV_Estimator(dist::Array{T,2}) where {T<:Number}
         return 2 * n_even
     end
 end
-function EstimateDimensionANOVA(data::Array{T,2}, x::Vector{S}, ϵ_array::Vector{U}) where {T,S,U <: Number}
-    dist = Distances.pairwise(Distances.Euclidean(), data, reshape(x,length(x),1))
-    m = size(data, 2)
-    data_x = data - repmat(x', m)'
-    cos_dist = Distances.pairwise(Distances.CosineDist(), data_x)
-    cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
-    return pmap(ϵ_array) do ϵ
-        index = find(dist .< ϵ)
-            if length(index) > 0
-                return DQV_Estimator(cos_dist[index,index])
-            else
-                return 0
-            end
-        end
-end
-function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}) where {T,S <: Number}
+function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}, projective) where {T,S <: Number}
+        n = size(data, 1)
         m = size(data, 2)
-        dist = Distances.pairwise(Distances.Euclidean(), data)
-        estimators = map(1:m) do i
-            x = vec(data[:,i])
-            data_x = data[:,[1:i-1;i+1:m]] - repmat(x', m-1)'
-            cos_dist = Distances.pairwise(Distances.CosineDist(), data_x)
-            cos_dist = acos.((-1) .* (cos_dist .- 1)) .- (pi/2)
+        dist = zeros(T, m, m)
+
+        if !projective
+            dist = ScaledEuclidean(data)
+        else
+            data = hcat([normalize(data[:,i]) for i in 1:m]...)
+            dist = ScaledFubiniStudy(data)
+        end
+        estimators = pmap(1:m) do i
+            P = zeros(T, n, n)
+            if projective
+                u = zeros(T, n, m)
+                P = eye(n) - A_mul_Bc(data[:,i], data[:,i])
+                data_x = A_mul_B!(u, P, data)
+            end
+            data_x = data[:,[1:i-1;i+1:m]] .- data[:,i]
+            cos_dist = FubiniStudyDistances(data_x)
             return pmap(ϵ_array) do ϵ
                 index = find(dist[i,[1:i-1;i+1:m]] .< ϵ)
                 k = length(index)
@@ -277,7 +375,56 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{S}) where {T,
             sum(estimators[i][1]) / sum(estimators[i][2])
         end
 end
-function EstimateDimensionANOVA(data::Array{T,2}, limit1::Number, limit2::Number; eps_ticks = 100) where {T<:Number}
-    ϵ = Array{Float64}(linspace(limit1, limit2, eps_ticks))
-    EstimateDimensionANOVA(data, ϵ)
+function EstimateDimensionANOVA(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(linspace(0.1, 0.9, eps_ticks))
+    EstimateDimensionANOVA(data, ϵ, projective)
+end
+
+
+#################################
+# PH curve dimension #
+#################################
+function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
+
+    if sum(dist .> 0.0) > 0
+        C = Eirene.eirene(dist, maxdim = 0)
+        B = Eirene.barcode(C, dim = 0)
+        m = size(B,1)
+
+        if m > 1
+            integral = sum([abs(B[i,2] - B[i,1]) for i in 1:(m-1)]) / (m-1)
+            return abs(log(m) / log(integral))
+        else
+            return 0.0
+        end
+    else
+        return 0.0
+    end
+end
+function EstimateDimensionPHCurve(data::Array{T,2}, ϵ_array::Vector{S}, projective) where {T,S <: Number}
+    if !projective
+        dist = ScaledEuclidean(data)
+    else
+        dist = ScaledFubiniStudy(data)
+    end
+
+    H = Clustering.hclust(dist, :single)
+    m = size(data,2)
+    return map(ϵ_array) do ϵ
+
+        if !projective
+
+        else
+
+        end
+
+        myclust = Clustering.cutree(H, h = ϵ)
+        groups = unique(myclust)
+        r = map(groups) do group
+            index = find(myclust .== group)
+            return EstimateDimensionPHCurve(dist[index,index]) * length(index)
+        end
+        return sum(r) / m
+    end
+
 end
