@@ -128,7 +128,7 @@ using Blink
 using Distances
 using JLD
 
-
+export eirene, barcode
 ##########################################################################################
 
 #### 	SIMPLICIAL CONSTRUCTIONS

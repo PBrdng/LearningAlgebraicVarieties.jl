@@ -386,8 +386,10 @@ end
 function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
 
     if sum(dist .> 0.0) > 0
-        C = Eirene.eirene(dist, maxdim = 0)
-        B = Eirene.barcode(C, dim = 0)
+        # C = Eirene.eirene(dist, maxdim = 0)
+        # B = Eirene.barcode(C, dim = 0)
+        C = eirene(dist, maxdim = 0)
+        B = barcode(C, dim = 0)
         m = size(B,1)
 
         if m > 1
