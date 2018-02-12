@@ -243,7 +243,7 @@ function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::
         range = Int.(round.(collect(linspace(50,100,length(dims)+1))))
         colors = map(r -> cols[r], range)
 
-        B = [Eirene.barcode(C, dim = d) for d in dims]
+        B = [barcode(C, dim = d) for d in dims]
         if upper_limit == Inf
             upper_limit = 2 * maximum([maximum(b[b.< Inf]) for b in B])
         end
@@ -295,6 +295,6 @@ function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::
          PlotlyJS.Plot(traces[end:-1:1], layout)
 end
 function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol; lw=2)
-    l = size(C["inputdata"]["distmat"],1)
+    l = size(C["symmat"],1)
     barcode_plot(C,dims, sorted_by, l .* ones(Int64,length(dims)), lw=lw)
 end
