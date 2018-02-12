@@ -1262,7 +1262,7 @@ function persistF2_vr(
 		"numrad"		=> numrad,
 		"fastop"		=> fastop,
 		"record"	 	=> record,
-		"version" 		=> Pkg.installed("Eirene"),
+		# "version" 		=> Pkg.installed("Eirene"),
 		"date"			=> string(Dates.Date(now())),
 		"time"			=> string(Dates.Time(now()))
 		)
@@ -1459,7 +1459,7 @@ function persistF2_cell(rv,cp,filt;maxdim=length(rv),record = "cyclerep",verbose
 	### Record the input parameters
 	input = Dict(
 		"model"			=> "complex",
-		"version" 		=> Pkg.installed("Eirene"),
+		# "version" 		=> Pkg.installed("Eirene"),
 		"date"			=> string(Dates.Date(now())),
 		"time"			=> string(Dates.Time(now())),
 		"maxdim"		=> maxdim,
