@@ -1,4 +1,4 @@
-export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot, EllipsoidDistance
+export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot, EllipsoidDistances
 
 """
 
@@ -306,7 +306,7 @@ EllipsoidDistance(data::Array{T,2}, f, λ::Number)
 Returns the matrix with distances between points weighted by the radii in direction data[:,i]-data[:,j] of ellipsoids that have radius 1 in tangent direction of {f=0} and radius λ in normal direction of {f=0}.
 """
 
-function EllipsoidDistance(data::Array{T,2}, f, λ::Number) where {T<:Number}
+function EllipsoidDistances(data::Array{T,2}, f, λ::Number) where {T<:Number}
   n, m = size(data)
   F = convert(Vector{FP.Polynomial{Float64}}, f)
   cfg = FP.JacobianConfig(F)
@@ -336,6 +336,6 @@ function EllipsoidDistance(data::Array{T,2}, f, λ::Number) where {T<:Number}
   for i in 1:length(Nans[1])
    D[Nans[1][i],Nans[2][i]] = 0.0
   end
-  
+
   return D+transpose(D)
 end
