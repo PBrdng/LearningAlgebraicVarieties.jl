@@ -332,7 +332,7 @@ function EllipsoidDistances(data::Array{T,2}, f, λ::Number) where {T<:Number}
    end
   end
 
-  Nans = findn(isnan(D))
+  Nans = findn(isnan.(D))
   for i in 1:length(Nans[1])
    D[Nans[1][i],Nans[2][i]] = 0.0
   end
