@@ -1,4 +1,4 @@
-export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot
+export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot, EllipsoidDistance
 
 """
 
@@ -297,4 +297,45 @@ end
 function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol; lw=2)
     l = size(C["symmat"],1)
     barcode_plot(C,dims, sorted_by, l .* ones(Int64,length(dims)), lw=lw)
+end
+
+"""
+
+EllipsoidDistance(data::Array{T,2}, f, λ::Number)
+
+Returns the matrix with distances between points weighted by the radii in direction data[:,i]-data[:,j] of ellipsoids that have radius 1 in tangent direction of {f=0} and radius λ in normal direction of {f=0}.
+"""
+
+function EllipsoidDistance(data::Array{T,2}, f, λ::Number) where {T<:Number}
+  n, m = size(data)
+  F = convert(Vector{FP.Polynomial{Float64}}, f)
+  cfg = FP.JacobianConfig(F)
+  Js = [FP.jacobian(F, data[:,i], cfg) for i in 1:m]
+  Vs = [svd(J, thin = false)[3] for J in Js]
+  r = rank(Js[rand(1:m)])
+  Σ = diagm([λ .* ones(r); ones(n-r)])
+  Qs = [V * Σ * V' for V in Vs]
+  dists = ScaledEuclidean(data)
+  D = map(CartesianRange((m,m))) do i
+   if i[1] < i[2]
+    Q1 = Qs[i[1]]
+    Q2 = Qs[i[2]]
+    u = data[:,i[1]]
+    v = data[:,i[2]]
+
+    h = (v-u)./norm(u-v)
+    a1 = transpose(h) * Q1 * h
+    a2 = transpose(h) * Q2 * h
+    return 2 * dists[i[1],i[2]]/(sqrt(a1[1])+sqrt(a2[1]))
+   else
+    return 0.0
+   end
+  end
+
+  Nans = findn(isnan(D))
+  for i in 1:length(Nans[1])
+   D[Nans[1][i],Nans[2][i]] = 0.0
+  end
+  
+  return D+transpose(D)
 end
