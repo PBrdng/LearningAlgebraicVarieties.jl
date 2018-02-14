@@ -1,4 +1,6 @@
-Learning Algebraic Varieties
+# Learning Algebraic Varieties
 
 
-Under construction....
+```@docs
+FubiniStudyDistances
+```
