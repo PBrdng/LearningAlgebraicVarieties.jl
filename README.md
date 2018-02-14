@@ -24,7 +24,7 @@ There are some optional arguments.
 * lw: sets the line width.
 * log_log = true: makes a plot in the log-log scale.
 
-# Example
+#### Example
 ```julia
 DimensionDiagrams(data, true)
 ```
