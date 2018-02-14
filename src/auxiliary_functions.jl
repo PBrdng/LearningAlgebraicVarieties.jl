@@ -234,7 +234,8 @@ barcode_plot(C::Dict{String,Any},
 
 Plots the barcode associated to the dictionary C that was produced by the eirene() function from the Eirene package. dims is an array determining which dimensions should be plotted. how_many_bars is an array that determines how many bars in each dimension are plotted. sorted_by can be either :lower_limit or :length.
 """
-function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
+function barcode_plot(B,
+     dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
 
         @assert length(dims) == length(how_many_bars) "Number of dimensions (was $(length(dims))) must be the same as the number of values specifying the number of bars that should be displayed for each dimension  (was $(length(how_many_bars)))."
 
@@ -243,7 +244,6 @@ function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::
         range = Int.(round.(collect(linspace(50,100,length(dims)+1))))
         colors = map(r -> cols[r], range)
 
-        B = [barcode(C, dim = d) for d in dims]
         if upper_limit == Inf
             upper_limit = 2 * maximum([maximum(b[b.< Inf]) for b in B])
         end
@@ -294,10 +294,16 @@ function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::
          )
          PlotlyJS.Plot(traces[end:-1:1], layout)
 end
-function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, sorted_by::Symbol; lw=2)
-    l = size(C["symmat"],1)
-    barcode_plot(C,dims, sorted_by, l .* ones(Int64,length(dims)), lw=lw)
+function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
+    B = [barcode(C, dim = d) for d in dims]
+    barcode_plot(B, dims, how_many_bars, sorted_by=sorted_by, lw=lw, upper_limit = upper_limit, fontsize = fontsize)
 end
+function barcode_plot(C::Dict{String,Any}, dims::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
+    l = size(C["symmat"],1)
+    B = [barcode(C, dim = d) for d in dims]
+    barcode_plot(B, dims, l .* ones(Int64,length(dims)), sorted_by=sorted_by, lw=lw, upper_limit = upper_limit, fontsize = fontsize)
+end
+
 
 """
 
