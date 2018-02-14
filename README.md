@@ -1,5 +1,6 @@
 # Learning Algebraic Varieties
 
+### How to make dimension diagrams
 ```@docs
 DimensionDiagrams(
     data::Array{T,2},
@@ -10,15 +11,18 @@ DimensionDiagrams(
     lw = 4,
     log_log = false
     ) where {T <: Number}
-
+```
 Produces Dimension Diagrams.
 * data is a matrix whose colums are the data points in Ω.
 * projective = false makes diagrams in euclidean space.
 * projective = true makes diagrams in projective space.
 There are some optional arguments.
 * methods lists the dimension estimators to be plotted.
-* eps_ticks = k puts into k evenly spaces ϵ on [0,1] at which the dimension is computed.
+* eps_ticks = k puts k evenly spaced ϵ into [0,1]. At those ϵs the dimensions are computed.
 * fontsize sets the fontsize of the axes.
 * lw sets the linewidth.
 * log_log = true makes a plot in the log-log scale.
+#Example
+```julia
+DimensionDiagrams(data, true)
 ```
