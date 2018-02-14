@@ -1,6 +1,6 @@
 # Learning Algebraic Varieties
 
-"""@docs
+```@docs
 DimensionDiagrams(
     data::Array{T,2},
     projective::Bool;
@@ -21,4 +21,4 @@ There are some optional arguments.
 * fontsize sets the fontsize of the axes.
 * lw sets the linewidth.
 * log_log = true makes a plot in the log-log scale.
-"""
+```
