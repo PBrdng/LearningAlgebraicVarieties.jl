@@ -234,8 +234,9 @@ barcode_plot(C::Dict{String,Any},
 
 Plots the barcode associated to the dictionary C that was produced by the eirene() function from the Eirene package. dims is an array determining which dimensions should be plotted. how_many_bars is an array that determines how many bars in each dimension are plotted. sorted_by can be either :lower_limit or :length.
 """
-function barcode_plot(B::Vector{Array{Any,2}}, dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
-    
+function barcode_plot(B,
+     dims::Array{Int64,1}, how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit, lw=10, upper_limit = Inf, fontsize = 16)
+
         @assert length(dims) == length(how_many_bars) "Number of dimensions (was $(length(dims))) must be the same as the number of values specifying the number of bars that should be displayed for each dimension  (was $(length(how_many_bars)))."
 
         # colors = Colors.distinguishable_colors(length(dims)+1,[RGB(1,1,1)])[2:end]
