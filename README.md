@@ -1,6 +1,7 @@
 # Learning Algebraic Varieties
 
 ### How to make dimension diagrams
+The function that creates the dimension diagrams is
 ```@docs
 DimensionDiagrams(
     data::Array{T,2},
@@ -12,7 +13,7 @@ DimensionDiagrams(
     log_log = false
     ) where {T <: Number}
 ```
-Produces Dimension Diagrams.
+Here:
 * data is a matrix whose colums are the data points in Ω.
 * projective = false makes diagrams in euclidean space.
 * projective = true makes diagrams in projective space.
