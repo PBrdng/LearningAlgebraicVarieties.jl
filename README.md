@@ -103,10 +103,7 @@ To compute a multivariate Vandermonde matrix with all monomials of degree 2, typ
 ```julia
 MultivariateVandermondeMatrix(data, 2, true)
 ```
-To compute a multivariate Vandermonde matrix with all monomials up to degree 2, type
-```julia
-MultivariateVandermondeMatrix(data, 2, false)
-```
+
 A multivariate Vandermonde matrix  may be passed to FindEquations:
 ```julia
 M = MultivariateVandermondeMatrix(data, 2, false)
