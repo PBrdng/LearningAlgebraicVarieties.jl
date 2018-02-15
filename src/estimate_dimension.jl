@@ -4,7 +4,6 @@ export DimensionDiagrams, EstimateDimensionMLE, EstimateDimensionANOVA, Estimate
 # Dimension Diagrams #
 ######################
 """
-
 DimensionDiagrams(
     data::Array{T,2},
     projective::Bool;
@@ -25,7 +24,6 @@ There are some optional arguments.
 * fontsize sets the fontsize of the axes.
 * lw sets the linewidth.
 * log_log = true makes a plot in the log-log scale.
-
 """
 function DimensionDiagrams(
     data::Array{T,2},
