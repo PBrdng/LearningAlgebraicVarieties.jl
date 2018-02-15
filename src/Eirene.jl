@@ -1,7 +1,4 @@
-#     You should have received a copy of the GNU General Public License
-#     along with Eirene.  If not, see <http://www.gnu.org/licenses/>.
 
-# print("\n
 # Eirene Library for Homologieirecal Algebra
 # Copyright (C) 2016, 2017, 2018  Gregory Henselman
 # www.gregoryhenselman.org
@@ -15,110 +12,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Eirene.  If not, see <http://www.gnu.org/licenses/>.
-#
-# ")
-# print_with_color(:blue,"
-# WELCOME TO EIRENE!
-# v$(Pkg.installed("Eirene"))
-#
-# Please help us document Eirene's recent work! Bibtex entries and
-# contact information for teaching and outreach can be found at the
-# Eirene homepage, http://gregoryhenselman.org/eirene.\n\n
-# ")
-#
-# ##########################################################################################
-#
-# #### 	REQUIREMENTS
-#
-# ##########################################################################################
-#
-# if typeof(Pkg.installed("Distances")) == Void
-# print_with_color(:green,"Please Note: Distances.jl may not be installed. This package is required
-# for use with Euclidean point cloud data. To install, enter the foll-
-# owing at the Julia prompt:
-#
-# Pkg.add(\"Distances\")
-# using Distances \n\n
-# ")
-# else
-# 	using Distances
-# end
-#
-# if typeof(Pkg.installed("JLD")) == Void
-# print_with_color(:green,"Please Note: JLD.jl may not be installed. This package is not required, but
-# it is the best means of saving Eirene output. To install, enter the
-# following at the Julia prompt:
-#
-# Pkg.add(\"JLD\")
-# using JLD \n\n
-# ")
-# else
-# 	using JLD
-# end
-#
-# if typeof(Pkg.installed("Blink")) == Void
-# print_with_color(:green,"Please Note: Blink.jl may not be installed. This package is required for
-# all Eirene functions ending in _pjs. To install, enter the following
-# at the Julia prompt:
-#
-# Pkg.add(\"Blink\")
-# using Blink
-# Blink.AtomShell.install() \n\n
-# ")
-# else
-# 	using Blink
-# end
-#
-# if typeof(Pkg.installed("PlotlyJS")) == Void
-# print_with_color(:green,"Please Note: PlotlyJS.jl may not be installed. This package is required
-# for all Eirene functions ending in _pjs. To install, enter the foll-
-# owing at the Julia prompt
-#
-# Pkg.add(\"PlotlyJS\")
-# using PlotlyJS \n\n
-# ")
-# else
-# 	using PlotlyJS
-# end
-#
-# if typeof(Pkg.installed("Plotly")) == Void
-# print_with_color(:green,"Please Note: Plotly.jl may not be installed. This package is required to
-# interface with the Plotly web API. To install, enter the foll-
-# owing at the Julia prompt
-#
-# Pkg.add(\"Plotly\")
-# using Plotly \n\n
-# ")
-# else
-# 	using Plotly
-# end
-#
-# if typeof(Pkg.installed("MultivariateStats")) == Void
-# print_with_color(:green,"Please Note: MultivariateStats.jl may not be installed. This package is required for
-# some operations pertaining to multidimensional scaling, but is not required.
-# To install, enter the following at the Julia prompt:
-#
-# Pkg.add(\"MultivariateStats\")
-# using MultivariateStats \n\n
-# ")
-# else
-# 	using MultivariateStats
-# end
-#
-# if typeof(Pkg.installed("Colors")) == Void
-# print_with_color(:green,"Please Note: Colors.jl may not be installed. This package is required for
-# some operations pertaining to plotting barcodes, but is not required.
-# To install, enter the following at the Julia prompt:
-#
-# Pkg.add(\"Colors\")
-# using MultivariateStats \n\n
-# ")
-# else
-# 	using Colors
-# end
 
 using PlotlyJS
 using Plotly
