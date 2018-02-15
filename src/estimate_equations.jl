@@ -4,45 +4,87 @@
 export MultivariateVandermondeMatrix, FindEquations
 
 
-# Main wrapper
-function FindEquations(point_sample::Array{T,2}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
-    M = MultivariateVandermondeMatrix(point_sample, exponents)
+"""
+FindEquations(data::Array{T,2},
+              alg::Symbol,
+              d::Int64,
+              homogeneous_equations::Bool)
+              where  {T<:Number}
+
+Finds equations.
+* data is a matrix whose colums are the data points in Ω.
+* alg is the algorithm that should be used (one of :with_svd, :with_qr, :with_rref).
+* d is the degree of the equations.
+* homogeneous_equations = true restricts the search space to homogeneous polynomials.
+* homogeneous_equations = false computes all polynomials of degree at most d.
+
+Alternatively, you can specifiy the exponents of the monomials.
+
+FindEquations(data::Array{T,2},
+              alg::Symbol,
+              exponents::Array{Array{Int64,1},1})
+              where  {T<:Number}
+
+Here, exponents is an array of exponents.
+"""
+function FindEquations(data::Array{T,2}, alg::Symbol, exponents::Array{Array{Int64,1},1}) where  {T<:Number}
+    M = MultivariateVandermondeMatrix(data, exponents)
     FindEquations(M,alg)
 end
-function FindEquations(point_sample::Array{T,2}, alg::Symbol, degree::Int64, homogeneous_equations::Bool) where  {T<:Number}
+function FindEquations(data::Array{T,2}, alg::Symbol, degree::Int64, homogeneous_equations::Bool) where  {T<:Number}
     @assert degree > 0 "The degree must be positive."
-    M = MultivariateVandermondeMatrix(point_sample, degree, homogeneous_equations)
+    M = MultivariateVandermondeMatrix(data, degree, homogeneous_equations)
     FindEquations(M, alg)
 end
 
+"""
+MultivariateVandermondeMatrix(data::Array{T},
+                              d::Int64,
+                              homogeneous_equations::Bool)
+
+Creates a multivariate Vandermonde.
+* data is a matrix whose colums are the data points in Ω.
+* d is the degree of the monomials.
+* homogeneous_equations = true restricts the space of monomials to monomials of degree d.
+* homogeneous_equations = false computes all monomials of degree at most d.
+
+Alternatively, you can specifiy the exponents of the monomials.
+
+FindEquations(data::Array{T,2},
+              alg::Symbol,
+              exponents::Array{Array{Int64,1},1})
+              where  {T<:Number}
+
+Here, exponents is an array of exponents.
+"""
 # MultivariateVandermondeMatrix struct
 struct MultivariateVandermondeMatrix
     Vandermonde::Array
     exponents::Vector
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T}, exponents::Vector) where {T<:Number}
+    function MultivariateVandermondeMatrix(data::Array{T}, exponents::Vector) where {T<:Number}
 
         @assert length(unique(length.(exponents))) == 1 "Error: Exponents differ in size."
 
-        m = size(point_sample,2)
+        m = size(data,2)
         N = length(exponents)
         v = veronese(exponents,T)
         U = zeros(T,m,N)
         for i=1:m
-            U[i,:] = v(point_sample[:,i])
+            U[i,:] = v(data[:,i])
         end
         new(U, exponents)
     end
 
-    function MultivariateVandermondeMatrix(point_sample::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
-        n=size(point_sample,1)
+    function MultivariateVandermondeMatrix(data::Array{T}, d::Int64,  homogeneous_equations::Bool) where {T<:Number}
+        n=size(data,1)
         if homogeneous_equations
             exponents = collect(multiexponents(n,d))
         else
             exponents = vcat(map(i -> collect(multiexponents(n,-i)), -d:0)...)
         end
         # exponents=get_all_exponents(0,d,n,homogeneous_equations)
-        MultivariateVandermondeMatrix(point_sample, exponents)
+        MultivariateVandermondeMatrix(data, exponents)
     end
 end
 
@@ -150,6 +192,19 @@ function kernel_rref(R::Array{T,2}, tol::Float64) where {T <: Number}
     return transpose(kernel)
 end
 
+"""
+FindEquations(M::MultivariateVandermondeMatrix,
+              alg::Symbol)
+
+Finds equations on input a multivariate Vandermonde matrix M.
+* alg is one of :with_svd, :with_qr, :with_rref.
+
+You can specifiy the tolerance.
+
+FindEquations(M::MultivariateVandermondeMatrix,
+             alg::Symbol,
+             tol::Float64)
+"""
 # function that gets the equations from a MultivariateVandermondeMatrix
 function FindEquations(M::MultivariateVandermondeMatrix, alg::Symbol)
 

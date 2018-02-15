@@ -1,8 +1,8 @@
 # Learning Algebraic Varieties
 
-### How to make dimension diagrams
-The function that creates the dimension diagrams is
-```@docs
+## How to make dimension diagrams
+The function that creates the dimension diagrams is the following.
+```julia
 DimensionDiagrams(
     data::Array{T,2},
     projective::Bool;
@@ -28,3 +28,46 @@ There are some optional arguments.
 ```julia
 DimensionDiagrams(data, true)
 ```
+plots the all dimension diagrams for the data in projective space. On the other hand,
+```julia
+DimensionDiagrams(data, false, methods = [:CorrSum, :BoxCounting],
+eps_ticks = 10)
+```
+plots the dimension diagrams CorrSum and BoxCounting for data in euclidean space. The estimates are computed for 10 values of ϵ between 0 and 1.
+
+## How to find equations
+The function that finds equations is as follows.
+```julia
+FindEquations(data::Array{T,2},
+              alg::Symbol,
+              d::Int64,
+              homogeneous_equations::Bool)
+              where  {T<:Number}
+```
+Here:
+* ``data`` is a matrix whose colums are the data points in Ω.
+* ``alg`` is the algorithm that should be used (one of ``:with_svd``, ``:with_qr``, ``:with_rref``).
+* ``d`` is the degree of the equations.
+* ``homogeneous_equations = true`` restricts the search space to homogeneous polynomials.
+* ``homogeneous_equations = false`` computes all polynomials of degree at most d.
+
+Alternatively, you can specifiy the exponents of the monomials.
+
+```julia
+FindEquations(data::Array{T,2},
+              alg::Symbol,
+              exponents::Array{Array{Int64,1},1})
+              where  {T<:Number}
+```
+Here, exponents is an array of exponents.
+
+
+#### Example
+```julia
+FindEquations(data, :with_svd, 2, true)
+```
+tries to find homogeneous equations of degree 2 using SVD to compute the kernel of the Vandermonde matrix while
+```julia
+FindEquations(data, :with_qr, 3, false)
+```
+finds all polynomials of degree at most 3 and uses QR to compute the kernel of the Vandermonde matrix.
