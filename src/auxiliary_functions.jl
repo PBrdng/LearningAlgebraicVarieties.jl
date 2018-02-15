@@ -1,11 +1,9 @@
 export ScaledEuclidean, ScaledFubiniStudy, FubiniStudyDistances, FubiniStudyDistances!, multiexponents, barcode_plot, EllipsoidDistances
 
 """
-
 EuclideanDistances(data::Array{T,2})
 
 Returns the pairwise euclidean distances of the columns of data, and scales them, such that the maximal pairwise distances is 1.
-
 """
 function EuclideanDistances(data::Array{T,2}) where {T<:Number}
     n = size(data, 2)
@@ -24,11 +22,11 @@ function ScaledEuclidean(data::Array{T,2}) where {T<:Number}
     m = maximum(D)
     return D./m
 end
+
 """
-
 FubiniStudyDistances(data::Array{T,2})
-Returns the pairwise Fubini-Study distance of the of the columns of data.
 
+Returns the pairwise Fubini-Study distance of the of the columns of data.
 """
 function FubiniStudyDistances(data::Array{T,2}) where {T<:Number}
     m = size(data, 2)
@@ -64,11 +62,11 @@ function FubiniStudyDistances!(u::Array{T,2}, data::Array{S,2}) where {T,S<:Numb
     end
     return u+transpose(u)
 end
+
 """
 ScaledFubiniStudy(data::Array{T,2})
 
 Returns the pairwise Fubini-Study distance of the columns of data, and scales them, such that the maximal pairwise distances is 1.
-
 """
 function ScaledFubiniStudy(data::Array{T,2}) where {T<:Number}
     D = FubiniStudyDistances(data)
@@ -79,11 +77,9 @@ end
 
 
 """
-
 SafeDehomogenization(data::Array{T,2})
 
 Provides affine coordinates for the colums of projective data. The affine patch is safely chosen so that no point lies at infinity.
-
 """
 function SafeDehomogenization(data::Array{T,2}) where {T<:Number}
     n = size(data,1)
@@ -195,13 +191,12 @@ end
 
 
 """
-
-EllipsoidDistance(data::Array{T,2}, f, λ::Number)
+EllipsoidDistance(data::Array{T,2}, f, λ::Number, projective::Bool)
 
 Returns the matrix with distances between points weighted by the radii in direction data[:,i]-data[:,j] of ellipsoids that have radius 1 in tangent direction of {f=0} and radius λ in normal direction of {f=0}.
 """
 
-function EllipsoidDistances(data::Array{T,2}, f, λ::Number) where {T<:Number}
+function EllipsoidDistances(data::Array{T,2}, f, λ::Number, projective::Bool) where {T<:Number}
   n, m = size(data)
   F = convert(Vector{FP.Polynomial{Float64}}, f)
   cfg = FP.JacobianConfig(F)
@@ -210,20 +205,36 @@ function EllipsoidDistances(data::Array{T,2}, f, λ::Number) where {T<:Number}
   r = rank(Js[rand(1:m)])
   Σ = diagm([λ .* ones(r); ones(n-r)])
   Qs = [V * Σ * V' for V in Vs]
-  dists = ScaledEuclidean(data)
+
+  if !projective
+      dists = ScaledEuclidean(data)
+  else
+      dists = ScaledFubiniStudy(data)
+      Ps = map(1:m) do i
+          x = normalize(data[:,i])
+          return eye(n) - x*x'
+      end
+  end
+
   D = map(CartesianRange((m,m))) do i
    if i[1] < i[2]
-    Q1 = Qs[i[1]]
-    Q2 = Qs[i[2]]
-    u = data[:,i[1]]
-    v = data[:,i[2]]
+        Q1 = Qs[i[1]]
+        Q2 = Qs[i[2]]
+        u = data[:,i[1]]
+        v = data[:,i[2]]
 
-    h = (v-u)./norm(u-v)
-    a1 = transpose(h) * Q1 * h
-    a2 = transpose(h) * Q2 * h
-    return 2 * dists[i[1],i[2]]/(sqrt(a1[1])+sqrt(a2[1]))
+        if !projective
+            h1 = normalize(v-u)
+            h2 = h1
+       else
+            h1 = normalize(Ps[i[1]] * (v-u))
+            h2 = normalize(Ps[i[2]] * (v-u))
+       end
+       a1 = transpose(h1) * Q1 * h1
+       a2 = transpose(h2) * Q2 * h2
+       return 2 * dists[i[1],i[2]]/(sqrt(a1[1])+sqrt(a2[1]))
    else
-    return 0.0
+       return 0.0
    end
   end
 
