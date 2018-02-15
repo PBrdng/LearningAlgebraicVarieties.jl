@@ -14,7 +14,7 @@ DimensionDiagrams(
     ) where {T <: Number}
 ```
 Here:
-* data is a matrix whose columns are the data points in Ω.
+* ``julia data`` is a matrix whose columns are the data points in Ω.
 * projective = false: makes diagrams in euclidean space.
 * projective = true: makes diagrams in projective space.
 There are some optional arguments.
