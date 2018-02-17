@@ -142,7 +142,7 @@ Here:
 * `τ` is the tolerance value.
 
 ## Persistent homology
-For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package. We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see the [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
+For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package. We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see `Eirene`'s [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
 
 For example,
 ```julia
