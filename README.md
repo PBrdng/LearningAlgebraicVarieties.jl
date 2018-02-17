@@ -183,4 +183,4 @@ Finally, the ellipsoid-driven complex is encoded in a distance matrix. It is com
 ```julia
 EllipsoidDistances(Ω, f, λ)
 ```
-where λ sets the ratio between the principal axes of the ellipsoids and `f` is a vector of polynomials of type [DynamicPolynomials.jl](https://github.com/JuliaAlgebra/DynamicPolynomials.jl).
+where `f` is a vector of polynomials from [DynamicPolynomials.jl](https://github.com/JuliaAlgebra/DynamicPolynomials.jl) and λ sets the ratio between the principal axes of the ellipsoids
