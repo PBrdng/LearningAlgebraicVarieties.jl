@@ -5,7 +5,19 @@ Welcome to the LearningAlgebraicVarieties package associated to the article
 
 by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
+To install the package, open a new `Julia` session and type
+```julia
+Pkg.clone("https://github.com/PBrdng/LearningAlgebraicVarieties.git")
+```
+After the installation is completed the command
+```
+using LearningAlgebraicVarieties
+```
+loads all the functions into the current session.
+
 All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as `Array{T,2}` where `T<:Number`.
+
+We provide some datasets in the [JLD](https://github.com/JuliaIO/JLD.jl.git) data format.
 
 ## How to make dimension diagrams
 Here is an example:
@@ -124,3 +136,31 @@ Here:
 * `homogeneous_equations = false` computes all polynomials of degree at most d.
 * `exponents` is an array of exponent vectors.
 * `τ` is the tolerance value.
+
+## Persistent homology
+For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package.
+
+We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see the [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
+
+For example,
+```julia
+barcode_plot(C, [0,1,2], [5,5,5])
+```
+plots barcodes in dimensions 0, 1 and 2 and plots 5 bars in each dimension. The full syntax is as follows.
+```julia
+barcode_plot(C::Dict{String,Any},
+             dims::Array{Int64,1},
+             how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit,
+             lw=10,
+             upper_limit = Inf,
+             fontsize = 16)
+
+```
+Here
+* `C` is the dictionary computes with the `eirene()` function.
+* `dims` is an array that determins which dimensions should be displayed.
+* `how_many_bars` is an array that specifies how many bars in each dimension should be plotted. The length of this array must coincide with the length of `dims`.
+* `sorted_by` is either `:lower_limit` or `:length`. In the first case, the bars are sorted by their date of appearance, in the second case the bars are sorted by length.
+* `lw` defines the width of the bars.
+* `upper_limit` sets the upper limit of the x-axis in the plot. If `upper_limif = Inf`, the upper limit is set as twice the length of the second longest barcode.
+* `fontsize` sets the font size of the axes.
