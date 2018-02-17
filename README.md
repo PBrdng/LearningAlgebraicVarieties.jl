@@ -10,14 +10,18 @@ To install the package, open a new `Julia` session and type
 Pkg.clone("https://github.com/PBrdng/LearningAlgebraicVarieties.git")
 ```
 After the installation is completed the command
-```
+```julia
 using LearningAlgebraicVarieties
 ```
 loads all the functions into the current session.
 
 All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as `Array{T,2}` where `T<:Number`.
 
-We provide some datasets in the [JLD](https://github.com/JuliaIO/JLD.jl.git) data format.
+We provide some datasets in the [JLD](https://github.com/JuliaIO/JLD.jl.git) data format. They can be loaded into the session by typing
+```julia
+import JLD: load
+datasets = load(string(Pkg.dir("LearningAlgebraicVarieties"), "/datasets.jld"))
+```
 
 ## How to make dimension diagrams
 Here is an example:
@@ -138,9 +142,7 @@ Here:
 * `τ` is the tolerance value.
 
 ## Persistent homology
-For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package.
-
-We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see the [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
+For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package. We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see the [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
 
 For example,
 ```julia
@@ -164,3 +166,21 @@ Here
 * `lw` defines the width of the bars.
 * `upper_limit` sets the upper limit of the x-axis in the plot. If `upper_limif = Inf`, the upper limit is set as twice the length of the second longest barcode.
 * `fontsize` sets the font size of the axes.
+
+## Distances
+Computing distances is a key aspect in both dimension estimation and persistent homology. Here are the functions with which we compute distances.
+
+To compute the scaled Fubini Study distances between the data points in Ω type
+```julia
+ScaledEuclidean(Ω)
+```
+
+On the other hand,to compute the scaled Fubini Study distances between the data points in Ω type
+```julia
+ScaledFubiniStudy(Ω)
+```
+Finally, the ellipsoid-driven complex is encoded in a distance matrix. It is computed by typing
+```julia
+EllipsoidDistances(Ω, f, λ)
+```
+where λ sets the ratio between the principal axes of the ellipsoids and `f` is a vector of polynomials of type [DynamicPolynomials.jl](https://github.com/JuliaAlgebra/DynamicPolynomials.jl).
