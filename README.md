@@ -5,7 +5,7 @@ Welcome to the LearningAlgebraicVarieties package associated to the article
 
 by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
-All functions accept m data points in ℝ^n ``math \mathbb{R}^n`` or ℙ^(n-1) as an m×n matrix Ω; i.e., as Julia's data structure `Array{T,2}` where `T<:Number`.
+All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as Julia's data structure `Array{T,2}` where `T<:Number`.
 
 ## How to make dimension diagrams
 Here is an example:
