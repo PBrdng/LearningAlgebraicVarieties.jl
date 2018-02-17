@@ -56,7 +56,7 @@ It is also possible to define the exponents involved. For example,
 exponents = [[1,0,0], [1,1,1]]
 MultivariateVandermondeMatrix(Ω, exponents)
 ```
-computes the multivariate Vandermonde matrix for `\Omega \subset\mathbb{R}^3` and the monomials `x` and `xyz`.
+computes the multivariate Vandermonde matrix for Ω ⊂ ℝ^3 and the monomials `x_1` and `x_1 x_2 x_3`.
 
 Here is the full syntax
 ```julia
@@ -80,17 +80,21 @@ FindEquations(Ω::Array{T,2},
 Here, exponents is an array of exponents.
 
 ## How to find equations
+Here is an example.
 ```julia
 FindEquations(Ω, :with_svd, 2, true)
 ```
-tries to find homogeneous equations of degree 2 using SVD to compute the kernel of the Vandermonde matrix, while
+finds homogeneous equations of degree 2 using SVD to compute the kernel of the Vandermonde matrix, while
 ```julia
 FindEquations(Ω, :with_qr, 3, false)
 ```
 finds all polynomials of degree at most 3 and uses QR to compute the kernel of the Vandermonde matrix.
 
-To compute a multivariate Vandermonde matrix with all monomials of degree 2, type
-
+To find all equations with support `x_1 x_2` and `x_1^2` using the reduced row echelon form to compute the kernel, type
+```julia
+exponents = [[1,1], [2,0]]
+FindEquations(Ω, :with_rref, exponents)
+```
 
 A multivariate Vandermonde matrix  may be passed to FindEquations:
 ```julia
@@ -100,13 +104,22 @@ FindEquations(M, :with_svd, τ)
 where τ is a tolerance value.
 
 
-The function that finds equations is as follows.
+The full syntax of ``FindEquations`` is as follows.
 ```julia
 FindEquations(Ω::Array{T,2},
               alg::Symbol,
               d::Int64,
               homogeneous_equations::Bool)
               where  {T<:Number}
+
+FindEquations(Ω::Array{T,2},
+              alg::Symbol,
+              exponents::Array{Array{Int64,1},1})
+              where  {T<:Number}
+
+FindEquations(M::MultivariateVandermondeMatrix,
+              alg::Symbol,
+              τ::Float64)
 ```
 Here:
 * `Ω` is a matrix whose colums are the data points.
@@ -114,20 +127,5 @@ Here:
 * `d` is the degree of the equations.
 * `homogeneous_equations = true` restricts the search space to homogeneous polynomials.
 * `homogeneous_equations = false` computes all polynomials of degree at most d.
-
-Alternatively, you can specifiy the exponents of the monomials.
-
-```julia
-FindEquations(Ω::Array{T,2},
-              alg::Symbol,
-              exponents::Array{Array{Int64,1},1})
-              where  {T<:Number}
-```
-Here, exponents is an array of exponents. It is also possible to pass a multivariate Vandermonde matrix to FindEquations:
-
-```julia
-FindEquations(M::MultivariateVandermondeMatrix,
-              alg::Symbol,
-              tol::Float64)
-```
-Here, M is a multivariate Vandermonde matrix and tol is the tolerance.
+* `exponents` is an array of exponent vectors.
+* `τ` is the tolerance value.
