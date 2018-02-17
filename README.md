@@ -63,21 +63,16 @@ Here is the full syntax
 MultivariateVandermondeMatrix(Ω::Array{T},
                               d::Int64,
                               homogeneous_equations::Bool)
+
+MultivariateVandermondeMatrix(data::Array{T},
+                              exponents::Vector)
 ```
 where
 * `Ω` is a matrix whose colums are the data.
 * `d` is the degree of the monomials.
 * `homogeneous_equations = true` restricts the space of monomials to monomials of degree d.
 * `homogeneous_equations = false` computes all monomials of degree at most d.
-
-or
-```julia
-FindEquations(Ω::Array{T,2},
-              alg::Symbol,
-              exponents::Array{Array{Int64,1},1})
-              where  {T<:Number}
-```
-Here, exponents is an array of exponents.
+* `exponents` is an array of exponents vectors.
 
 ## How to find equations
 Here is an example.
