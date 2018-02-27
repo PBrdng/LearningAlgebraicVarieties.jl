@@ -1,9 +1,5 @@
 # Learning Algebraic Varieties
-Welcome to the LearningAlgebraicVarieties package associated to the article
-
-              [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436)
-
-by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
+Welcome to the LearningAlgebraicVarieties package associated to the article [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436) by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
 To install the package, open a new `Julia` session and type
 ```julia
