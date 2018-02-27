@@ -1,7 +1,7 @@
 # Learning Algebraic Varieties
 Welcome to the LearningAlgebraicVarieties package associated to the article
 
-              Learning Algebraic Varieties from Samples
+              [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436)
 
 by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
