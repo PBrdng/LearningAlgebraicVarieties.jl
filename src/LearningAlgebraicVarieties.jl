@@ -11,7 +11,7 @@ module LearningAlgebraicVarieties
     import Clustering
     import PlotlyJS
     import Colors
-
+    
     include("Eirene.jl")
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
