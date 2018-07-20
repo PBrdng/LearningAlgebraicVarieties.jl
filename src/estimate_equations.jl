@@ -100,9 +100,8 @@ end
 # v(x) is the array with all the monomials in the entries of x of degree d
 function veronese(exponents::Vector, ::Type{T})  where {T<:Number}
     v = veronese_array(exponents, T)
-    cfg = FP.JacobianConfig(v)
     function (x::Vector)
-        FP.evaluate(v,x,cfg)
+        FP.evaluate(v,x)
     end
 end
 

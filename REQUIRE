@@ -1,4 +1,4 @@
-FixedPolynomials 0.2.0
+FixedPolynomials 0.3.0
 MultivariatePolynomials
 DynamicPolynomials
 RowEchelon
@@ -8,4 +8,3 @@ Plotly
 PlotlyJS
 MultivariateStats
 Distances
-Eirene
