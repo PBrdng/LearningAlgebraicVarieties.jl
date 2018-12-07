@@ -1,6 +1,8 @@
 # Learning Algebraic Varieties
 Welcome to the LearningAlgebraicVarieties package from the article [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436) by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
+Important: Currently not working, due to some ill dependencies with Julia 0.6. Will be upgraded soon.
+
 To install the package, open a new `Julia` session and type
 ```julia
 Pkg.clone("https://github.com/PBrdng/LearningAlgebraicVarieties.git")
