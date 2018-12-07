@@ -162,7 +162,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
             non_zero_coeffs = findall(x -> abs(x) > tol, kernel[i,:])
             if length(non_zero_coeffs) > 0
                 monomial = map(c -> prod(map(i -> x_[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
-                return transpose(kernel[i,non_zero_coeffs]) * monomial
+                return LinearAlgebra.dot(kernel[i,non_zero_coeffs]),  monomial)
             else
                 return 0.0*x[1]
             end
