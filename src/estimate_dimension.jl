@@ -217,7 +217,7 @@ function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}, pro
         d = map(1:n) do i
             a = [u_min[i]; 1.0]
             b = [u_max[i]; 1.0]
-            c = abs(LinearAlgebra.dot(a,b) / (norm(a) * norm(b)))
+            c = abs(LinearAlgebra.dot(a,b) / (LinearAlgebra.norm(a) * LinearAlgebra.norm(b)))
             if c < 1.0
                 return acos(c)
             else
@@ -235,7 +235,7 @@ function EstimateDimensionBoxCounting(data::Array{T,2}, ϵ_array::Vector{S}, pro
                     return map(1:n) do i
                         a = [u_min[i]; 1.0]
                         b = [data[i,j]; 1.0]
-                        c = abs(LinearAlgebra.dot(a,b) / (norm(a) * norm(b)))
+                        c = abs(LinearAlgebra.dot(a,b) / (LinearAlgebra.norm(a) * LinearAlgebra.norm(b)))
                         if c < 1.0
                             return acos(c)
                         else
