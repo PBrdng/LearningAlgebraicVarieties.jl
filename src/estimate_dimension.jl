@@ -1,4 +1,4 @@
-export DimensionDiagrams, EstimateDimension, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum
+export DimensionDiagrams, EstimateDimension, EstimateDimensionMLE, EstimateDimensionANOVA, EstimateDimensionNPCA, EstimateDimensionPCA, EstimateDimensionCorrSum, EstimateDimensionBoxCounting
 
 ######################
 # Dimension Diagrams #
@@ -314,7 +314,7 @@ function DQV_Estimator(dist::Array{T,2}) where {T<:Number}
     # Compute the U-statistic from Equation (3)
     m = size(dist,1)
     v = vec(dist) .- pi/2
-    S = dot(v, v)
+    S = LinearAlgebra.dot(v, v)
     S /= (2 * binomial(m,2))
 
     # Now we have to compute the variances β from Lemma 2.5
@@ -360,7 +360,7 @@ function EstimateDimensionANOVA(data::Array{T,2}, ϵ_array::Vector{U}, projectiv
     if !projective
         dist = ScaledEuclidean(data)
     else
-        data = hcat([normalize(data[:,i]) for i in 1:m]...)
+        data = hcat([LinearAlgebra.normalize(data[:,i]) for i in 1:m]...)
         dist = ScaledFubiniStudy(data)
     end
 

@@ -156,7 +156,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
     DynamicPolynomials.@polyvar x_[1:nvars]
 
     if l == 0
-        return 0
+        return [0]
     else
         map(1:l) do i
             non_zero_coeffs = findall(x -> abs(x) > tol, kernel[i,:])

@@ -5,9 +5,6 @@ using Test, LinearAlgebra, DynamicPolynomials, LearningAlgebraicVarieties
 @testset "Auxiliary Functions" begin
     data = rand(2,10)
 
-    D = EuclideanDistances(data)
-    @test size(D) == (10,10)
-
     D = ScaledEuclidean(data)
     @test maximum(D) <= 1
 
@@ -20,9 +17,6 @@ using Test, LinearAlgebra, DynamicPolynomials, LearningAlgebraicVarieties
 
     D = ScaledFubiniStudy(data)
     @test maximum(D) <= 1
-
-    U = SafeDehomogenization(data)
-    @test size(U) == (1,10)
 
     @polyvar x y
     f = x^2 + 2y^2 - 1
@@ -126,10 +120,20 @@ end
 end
 
 ###estimate_equations
+@testset "FindEquations" begin
+    data = hcat(map(i -> [i[1];-i[1]+1], rand(10))...)
+
+    f = FindEquations(data, :with_svd, 1, false)
+    @test abs(f[1]([1;0])) < 1e-15
+
+    f = FindEquations(data, :with_svd, 2, true)
+    @test f[1] == 0
+end
+
 @testset "Vandermonde" begin
     data = hcat(map(i -> [i[1];-i[1]+1], rand(10))...)
-    M = MultivariateVandermondeMatrix(data, 2, false)
-    @test size(M.Vandermonde) == (10,6)
+    M = MultivariateVandermondeMatrix(data, 1, false)
+    @test size(M.Vandermonde) == (10,3)
 
     f = FindEquations(M, :with_svd)
     @test abs(f[1]([1;0])) < 1e-15

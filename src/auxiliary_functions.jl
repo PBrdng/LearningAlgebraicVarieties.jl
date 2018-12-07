@@ -121,7 +121,7 @@ function EllipsoidDistances(data::Array{T,2}, f::Vector{S}, λ::Number) where {T
     cfg = FP.JacobianConfig(F)
     Js = [FP.jacobian(F, data[:,i], cfg) for i in 1:m]
     Vs = [LinearAlgebra.svd(J, full = true).V for J in Js]
-    r = rank(Js[rand(1:m)])
+    r = LinearAlgebra.rank(Js[rand(1:m)])
     Σ = LinearAlgebra.diagm(0 => [λ .* ones(r); ones(n-r)])
 
     Qs = [V * Σ * V' for V in Vs]
