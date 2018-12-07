@@ -153,7 +153,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
     tol = 1e-10
     l = size(kernel,1)
     nvars = length(exponents[1])
-    @polyvar x_[1:nvars]
+    DynamicPolynomials.@polyvar x_[1:nvars]
 
     if l == 0
         return 0
