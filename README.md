@@ -140,7 +140,7 @@ Here:
 * `τ` is the tolerance value.
 
 ## Persistent homology
-This functionality is currently not avaible.
+This functionality is currently not avaible, until Eirene has been updated to Julia 1.0.
 
 ## Distances
 Computing distances is a key aspect in both dimension estimation and persistent homology. Here are the functions with which we compute distances.
