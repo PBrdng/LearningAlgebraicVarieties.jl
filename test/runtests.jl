@@ -132,6 +132,10 @@ end
 
 @testset "Vandermonde" begin
     data = hcat(map(i -> [i[1];-i[1]+1], rand(10))...)
+
+    M = MultivariateVandermondeMatrix(data, [[1,0], [1,1]])
+    @test size(M.Vandermonde) == (10,2)
+
     M = MultivariateVandermondeMatrix(data, 1, false)
     @test size(M.Vandermonde) == (10,3)
 

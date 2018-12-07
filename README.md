@@ -1,5 +1,5 @@
 # Learning Algebraic Varieties
-Welcome to the LearningAlgebraicVarieties package associated to the article [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436) by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
+Welcome to the LearningAlgebraicVarieties package from the article [Learning Algebraic Varieties from Samples](https://arxiv.org/abs/1802.09436) by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
 To install the package, open a new `Julia` session and type
 ```julia
@@ -11,7 +11,7 @@ using LearningAlgebraicVarieties
 ```
 loads all the functions into the current session.
 
-All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as `Array{T,2}` where `T<:Number`.
+All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as arrays.
 
 We provide some datasets in the [JLD](https://github.com/JuliaIO/JLD.jl.git) data format. They can be loaded into the session by typing
 ```julia
@@ -26,7 +26,7 @@ DimensionDiagrams(Ω, true)
 ```
 plots the all dimension diagrams for the data in projective space. On the other hand,
 ```julia
-DimensionDiagrams(Ω, false, methods = [:CorrSum, :BoxCounting], eps_ticks = 10)
+DimensionDiagrams(Ω, false, diagrams = [:CorrSum, :BoxCounting], eps_ticks = 10)
 ```
 plots the dimension diagrams CorrSum and BoxCounting for data in euclidean space. The estimates are computed for 10 values of ϵ between 0 and 1.
 
@@ -35,7 +35,7 @@ The complete syntax of the ``DimensionDiagrams`` function is as follows.
 DimensionDiagrams(
     Ω::Array{T,2},
     projective::Bool;
-    methods  = [:CorrSum, :BoxCounting, :PHCurve, :NPCA, :MLE, :ANOVA],
+    diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 16,
     lw = 4,
@@ -52,6 +52,8 @@ There are some optional arguments.
 * `fontsize`: sets the font size of the axes.
 * `lw`: sets the line width.
 * `log_log = true`: makes a plot in the log-log scale.
+
+#### Important: the PHCurve diagram is currently not available.
 
 
 ## How to compute multivariate Vandermonde matrices
@@ -138,30 +140,7 @@ Here:
 * `τ` is the tolerance value.
 
 ## Persistent homology
-For computing barcodes in persistent homology we use the package [Eirene](https://github.com/Eetion/Eirene.jl). Until it has become an official package `LearningAlgebraicVarieties` contains the full source of `Eirene`. In future versions we will import the official `Eirene` package. We provide the `barcode_plot` functions that takes as input a dictionary `C` computed with the `eirene()` function. For details, see `Eirene`'s [online documentation](http://gregoryhenselman.org/eirene/documentation.html).
-
-For example,
-```julia
-barcode_plot(C, [0,1,2], [5,5,5])
-```
-plots barcodes in dimensions 0, 1 and 2 and plots 5 bars in each dimension. The full syntax is as follows.
-```julia
-barcode_plot(C::Dict{String,Any},
-             dims::Array{Int64,1},
-             how_many_bars::Array{Int64,1}; sorted_by::Symbol=:lower_limit,
-             lw=10,
-             upper_limit = Inf,
-             fontsize = 16)
-
-```
-Here
-* `C` is the dictionary computes with the `eirene()` function.
-* `dims` is an array that determins which dimensions should be displayed.
-* `how_many_bars` is an array that specifies how many bars in each dimension should be plotted. The length of this array must coincide with the length of `dims`.
-* `sorted_by` is either `:lower_limit` or `:length`. In the first case, the bars are sorted by their date of appearance, in the second case the bars are sorted by length.
-* `lw` defines the width of the bars.
-* `upper_limit` sets the upper limit of the x-axis in the plot. If `upper_limif = Inf`, the upper limit is set as twice the length of the second longest barcode.
-* `fontsize` sets the font size of the axes.
+This functionality is currently not avaible.
 
 ## Distances
 Computing distances is a key aspect in both dimension estimation and persistent homology. Here are the functions with which we compute distances.
