@@ -1,5 +1,6 @@
 using Test, LinearAlgebra, DynamicPolynomials, LearningAlgebraicVarieties
 
+@testset "LearningAlgebraicVarieties" begin
 
 ### auxiliary_functions
 @testset "Auxiliary Functions" begin
@@ -156,4 +157,6 @@ end
 
     f = FindEquations(M, :with_rref, 1e-12)
     @test abs(f[1]([1;0])) < 1e-15
+end
+
 end
