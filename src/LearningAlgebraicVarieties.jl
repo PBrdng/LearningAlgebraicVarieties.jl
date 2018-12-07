@@ -1,19 +1,20 @@
 module LearningAlgebraicVarieties
 
-
-    import Base: start, next, done, length, eltype
+    import LinearAlgebra
+    import Statistics
     import FixedPolynomials
     const FP = FixedPolynomials
     import MultivariatePolynomials
     const MP = MultivariatePolynomials
-    import DynamicPolynomials: @polyvar
+    import DynamicPolynomials
+    import Combinatorics
     import RowEchelon
     import Clustering
-    import PlotlyJS
     import Colors
-    
-    include("Eirene.jl")
+    import PlotlyJS
+
+    include("auxiliary_functions.jl")
     include("estimate_equations.jl")
     include("estimate_dimension.jl")
-    include("auxiliary_functions.jl")
+
 end
