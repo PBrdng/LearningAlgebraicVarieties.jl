@@ -3,6 +3,7 @@ Welcome to the LearningAlgebraicVarieties package from the article [Learning Alg
 
 To install the package, open a new `Julia` session and type
 ```julia
+using Pkg
 Pkg.clone("https://github.com/PBrdng/LearningAlgebraicVarieties.git")
 ```
 After the installation is completed the command
@@ -13,11 +14,12 @@ loads all the functions into the current session.
 
 All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as arrays.
 
-We provide some datasets in the [JLD](https://github.com/JuliaIO/JLD.jl.git) data format. They can be loaded into the session by typing
+We provide some datasets in the [JLD2](https://github.com/JuliaIO/JLD2.jl.git) data format. They can be loaded into the session by typing
 ```julia
-import JLD: load
-datasets = load(string(Pkg.dir("LearningAlgebraicVarieties"), "/datasets.jld"))
+using JLD2, FileIO # add those packages with Pkg.add("..")
+data = load(joinpath(dirname(pathof(LearningAlgebraicVarieties)), "datasets.jld2"), "data")
 ```
+
 
 ## How to make dimension diagrams
 Here is an example:
