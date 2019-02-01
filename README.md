@@ -14,10 +14,10 @@ loads all the functions into the current session.
 
 All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i.e., as arrays.
 
-We provide some datasets in the [JLD2](https://github.com/JuliaIO/JLD2.jl.git) data format. They can be loaded into the session by typing
+We provide some datasets in the [JLD2](https://github.com/JuliaIO/JLD2.jl.git) data format. Download the 'datasets.jld2' from this repository, navigate to its folder and use
 ```julia
-using JLD2, FileIO # add those packages with Pkg.add("..")
-data = load(joinpath(dirname(pathof(LearningAlgebraicVarieties)), "datasets.jld2"), "data")
+using JLD2 # add this packages with Pkg.add("JLD2")
+@load "datasets.jld2"
 ```
 
 
