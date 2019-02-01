@@ -19,7 +19,7 @@ We provide some datasets in the [JLD2](https://github.com/JuliaIO/JLD2.jl.git) d
 using JLD2 # add this packages with Pkg.add("JLD2")
 @load "datasets.jld2"
 ```
-
+Now, your session should contain a dictionary with name 'data' containing some datasets.
 
 ## How to make dimension diagrams
 Here is an example:
