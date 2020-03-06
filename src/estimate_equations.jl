@@ -209,7 +209,7 @@ function kernel_qr(R::Array{T,2}, tol::Float64) where {T <: Number}
             kernel[i,index[i]] = one(eltype(R))
             kernel[i,index2] =  (-1) .* R_small\R[:,index[i]]
         end
-        R_new = [R; pinv(kernel) * kernel]
+        R_new = [R; LinearAlgebra.pinv(kernel) * kernel]
         s = LinearAlgebra.svd(R_new, full = true)
         rk = sum(s.S .> tol)
         return  [kernel; s.Vt[rk + 1:end,:]]
