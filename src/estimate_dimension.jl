@@ -31,8 +31,7 @@ function DimensionDiagrams(
     diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 16,
-    lw = 4,
-    log_log = false
+    lw = 4
     ) where {T <: Number}
 
     n = size(data,1)
@@ -42,30 +41,35 @@ function DimensionDiagrams(
 
     ϵ = Array{Float64}(range(0.1, length = eps_ticks, stop = 0.9))
 
-    if !projective
-        y_upper = n+0.1
-    else
-        y_upper = n - 1 + 0.1
-    end
 
-    trace = map(diagrams) do m
+    p = Plots.plot()
+    dimension_estimates = map(diagrams) do m
         d = EstimateDimension(m, data, ϵ, projective)
-        PlotlyJS.scatter(;x=ϵ, y=d, mode="lines", name = string(m), line_width = lw, line_color = colors["$m"])
-    end
-    if !log_log
-        layout = PlotlyJS.Layout(;
-        xaxis = PlotlyJS.attr(range = [0, 1], title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
-        yaxis = PlotlyJS.attr(range = [0,y_upper], title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize))
-    else
-        layout = PlotlyJS.Layout(; xaxis_type = "log",
-        yaxis_type = "log",
-        xaxis_range = [-1, 0],
-        yaxis_range = [0,log10(y_upper)],
-        xaxis = PlotlyJS.attr(title="ϵ", titlefont_size=fontsize, tickfont_size=fontsize),
-        yaxis = PlotlyJS.attr(title="d(ϵ)", titlefont_size=fontsize, tickfont_size=fontsize,))
+        Plots.plot!(p, ϵ, d, label = string(m), lw = lw, linecolor = colors["$m"])
+
+        d
     end
 
-    PlotlyJS.plot(trace, layout)
+
+    if !projective
+        y_upper = n + 1 + 0.1
+    else
+        y_upper = n + 0.1
+    end
+    y_upper = max(y_upper, maximum(vcat(dimension_estimates...)))
+
+
+    Plots.plot(p,
+              xlims = [0,1],
+              ylims = [0,y_upper],
+              titlefont = fontsize,
+              tickfont = fontsize,
+              labelfontsize = fontsize,
+              xlabel = "ϵ",
+              ylabel = "d(ϵ)",
+              xscale = :none,
+              yscale = :none
+      )
 end
 
 #################
