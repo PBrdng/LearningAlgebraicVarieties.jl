@@ -1,5 +1,6 @@
 module LearningAlgebraicVarieties
 
+    import Plots
     import LinearAlgebra
     import Statistics
     import FixedPolynomials
@@ -11,7 +12,7 @@ module LearningAlgebraicVarieties
     import RowEchelon
     import Clustering
     import Colors
-    import PlotlyJS
+
 
     include("auxiliary_functions.jl")
     include("estimate_equations.jl")

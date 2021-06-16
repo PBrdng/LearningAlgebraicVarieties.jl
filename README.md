@@ -40,8 +40,7 @@ DimensionDiagrams(
     diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 16,
-    lw = 4,
-    log_log = false
+    lw = 4
     ) where {T <: Number}
 ```
 Here:
@@ -53,7 +52,6 @@ There are some optional arguments.
 * `eps_ticks = k`: puts k evenly spaced ϵ into [0,1]. At those ϵs the dimensions are computed.
 * `fontsize`: sets the font size of the axes.
 * `lw`: sets the line width.
-* `log_log = true`: makes a plot in the log-log scale.
 
 #### Important: the PHCurve diagram is currently not available.
 
