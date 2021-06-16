@@ -10,8 +10,7 @@ DimensionDiagrams(
     methods  = [:CorrSum, :BoxCounting, :PHCurve, :NPCA, :MLE, :ANOVA],
     eps_ticks = 25,
     fontsize = 16,
-    lw = 4,
-    log_log = false
+    lw = 4
     ) where {T <: Number}
 
 Produces Dimension Diagrams.
