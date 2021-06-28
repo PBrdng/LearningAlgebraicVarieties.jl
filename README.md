@@ -15,7 +15,7 @@ All functions accept m data points in ℝ^n or ℙ^(n-1) as an m×n matrix Ω; i
 
 We provide some datasets in the [JLD2](https://github.com/JuliaIO/JLD2.jl.git) data format. Download the `datasets.jld2` from this repository, navigate to its folder and use
 ```julia
-using JLD2 # add this packages with Pkg.add("JLD2")
+using JLD2 # add this packages with ]add JLD2
 @load "datasets.jld2"
 ```
 Now, your session should contain a dictionary with name `data` containing some datasets.
