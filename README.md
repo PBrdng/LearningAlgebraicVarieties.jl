@@ -3,8 +3,7 @@ Welcome to the LearningAlgebraicVarieties package from the article [Learning Alg
 
 To install the package, open a new `Julia` session and type
 ```julia
-using Pkg
-Pkg.clone("https://github.com/PBrdng/LearningAlgebraicVarieties.git")
+]add https://github.com/PBrdng/LearningAlgebraicVarieties.git
 ```
 After the installation is completed the command
 ```julia
