@@ -22,7 +22,6 @@ There are some optional arguments.
 * eps_ticks = k puts into k evenly spaces ϵ on [0,1] at which the dimension is computed.
 * fontsize sets the fontsize of the axes.
 * lw sets the linewidth.
-* log_log = true makes a plot in the log-log scale.
 """
 function DimensionDiagrams(
     data::Array{T,2},

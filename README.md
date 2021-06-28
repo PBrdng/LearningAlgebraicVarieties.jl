@@ -37,7 +37,7 @@ The complete syntax of the ``DimensionDiagrams`` function is as follows.
 DimensionDiagrams(
     Ω::Array{T,2},
     projective::Bool;
-    diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
+    diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA, :PHCurve],
     eps_ticks = 25,
     fontsize = 16,
     lw = 4
@@ -52,8 +52,6 @@ There are some optional arguments.
 * `eps_ticks = k`: puts k evenly spaced ϵ into [0,1]. At those ϵs the dimensions are computed.
 * `fontsize`: sets the font size of the axes.
 * `lw`: sets the line width.
-
-#### Important: the PHCurve diagram is currently not available.
 
 
 ## How to compute multivariate Vandermonde matrices
@@ -139,8 +137,6 @@ Here:
 * `exponents` is an array of exponent vectors.
 * `τ` is the tolerance value.
 
-## Persistent homology
-This functionality is currently not avaible, until Eirene has been updated to Julia 1.0.
 
 ## Distances
 Computing distances is a key aspect in both dimension estimation and persistent homology. Here are the functions with which we compute distances.
