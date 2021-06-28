@@ -12,6 +12,7 @@ module LearningAlgebraicVarieties
     import RowEchelon
     import Clustering
     import Colors
+    import Eirene
 
 
     include("auxiliary_functions.jl")

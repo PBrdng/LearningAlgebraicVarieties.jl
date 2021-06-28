@@ -7,7 +7,7 @@ export DimensionDiagrams, EstimateDimension, EstimateDimensionMLE, EstimateDimen
 DimensionDiagrams(
     data::Array{T,2},
     projective::Bool;
-    methods  = [:CorrSum, :BoxCounting, :PHCurve, :NPCA, :MLE, :ANOVA],
+    methods  = [:CorrSum, :BoxCounting, :PHCurve, :NPCA, :MLE, :ANOVA, :PHCurve],
     eps_ticks = 25,
     fontsize = 16,
     lw = 4
@@ -27,7 +27,7 @@ There are some optional arguments.
 function DimensionDiagrams(
     data::Array{T,2},
     projective::Bool;
-    diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA],
+    diagrams  = [:CorrSum, :BoxCounting, :NPCA, :MLE, :ANOVA, :PHCurve],
     eps_ticks = 25,
     fontsize = 16,
     lw = 4
@@ -36,7 +36,7 @@ function DimensionDiagrams(
     n = size(data,1)
 
     cols = Colors.colormap("RdBu", mid = 0.5)
-    colors = Dict("CorrSum" => cols[10], "BoxCounting"=> cols[25], "PHCurve"=> cols[40], "NPCA" => cols[60], "MLE" => cols[75], "ANOVA" => cols[90])
+    colors = Dict("CorrSum" => cols[5], "BoxCounting"=> cols[20], "PHCurve"=> cols[35], "NPCA" => cols[55], "MLE" => cols[70], "ANOVA" => cols[85], "PHCurve" => cols[100])
 
     ϵ = Array{Float64}(range(0.1, length = eps_ticks, stop = 0.9))
 
@@ -64,8 +64,8 @@ function DimensionDiagrams(
               titlefont = fontsize,
               tickfont = fontsize,
               labelfontsize = fontsize,
-              xlabel = "ϵ",
-              ylabel = "d(ϵ)",
+              xlabel = "epsilon",
+              ylabel = "d(epsilon)",
               xscale = :none,
               yscale = :none
       )
@@ -85,6 +85,8 @@ function EstimateDimension(method::Symbol, data::Array{T,2}, ϵ::Vector{S}, proj
         return EstimateDimensionMLE(data, ϵ, projective)
     elseif method == :ANOVA
         return EstimateDimensionANOVA(data, ϵ, projective)
+    elseif method == :PHCurve
+        return EstimateDimensionPHCurve(data, ϵ, projective)
     else
         println("Method not supported")
         return zeros(length(ϵ))
@@ -401,53 +403,50 @@ function EstimateDimensionANOVA(data::Array{T,2}, projective::Bool; eps_ticks = 
 end
 
 
-# WAIT FOR EIRENE UPDATE TO JULIA 1.0
-# #################################
-# # PH curve dimension #
-# #################################
-# function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
-#
-#     if sum(dist .> 0.0) > 0
-#         # C = Eirene.eirene(dist, maxdim = 0)
-#         # B = Eirene.barcode(C, dim = 0)
-#         C = eirene(dist, maxdim = 0)
-#         B = barcode(C, dim = 0)
-#         m = size(B,1)
-#
-#         if m > 1
-#             integral = sum([abs(B[i,2] - B[i,1]) for i in 1:(m-1)]) / (m-1)
-#             return abs(log(m) / log(integral))
-#         else
-#             return 0.0
-#         end
-#     else
-#         return 0.0
-#     end
-# end
-# function EstimateDimensionPHCurve(data::Array{T,2}, ϵ_array::Vector{S}, projective) where {T,S <: Number}
-#     if !projective
-#         dist = ScaledEuclidean(data)
-#     else
-#         dist = ScaledFubiniStudy(data)
-#     end
-#
-#     H = Clustering.hclust(dist, :single)
-#     m = size(data,2)
-#     return map(ϵ_array) do ϵ
-#
-#         if !projective
-#
-#         else
-#
-#         end
-#
-#         myclust = Clustering.cutree(H, h = ϵ)
-#         groups = unique(myclust)
-#         r = map(groups) do group
-#             index = find(myclust .== group)
-#             return EstimateDimensionPHCurve(dist[index,index]) * length(index)
-#         end
-#         return sum(r) / m
-#     end
-#
-# end
+#################################
+# PH curve dimension #
+#################################
+function EstimateDimensionPHCurve(dist::Array{T,2}) where {T <: Number}
+
+    if sum(dist .> 0.0) > 0
+        C = Eirene.eirene(dist, maxdim = 0)
+        B = Eirene.barcode(C, dim = 0)
+        m = size(B,1)
+
+        if m > 1
+            integral = sum([abs(B[i,2] - B[i,1]) for i in 1:(m-1)]) / (m-1)
+            return abs(log(m) / log(integral))
+        else
+            return 0.0
+        end
+    else
+        return 0.0
+    end
+end
+function EstimateDimensionPHCurve(data::Array{T,2}, ϵ_array::Vector{S}, projective) where {T,S <: Number}
+    if !projective
+        dist = ScaledEuclidean(data)
+    else
+        dist = ScaledFubiniStudy(data)
+    end
+
+    H = Clustering.hclust(dist, :single)
+    m = size(data,2)
+    return map(ϵ_array) do ϵ
+
+
+
+        myclust = Clustering.cutree(H, h = ϵ)
+        groups = unique(myclust)
+        r = map(groups) do group
+            index = findall(myclust .== group)
+            return EstimateDimensionPHCurve(dist[index,index]) * length(index)
+        end
+        return sum(r) / m
+    end
+end
+
+function EstimateDimensionPHCurve(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
+    ϵ = Array{Float64}(range(0.1, length =eps_ticks, stop = 0.9))
+    EstimateDimensionPHCurve(data, ϵ, projective)
+end
