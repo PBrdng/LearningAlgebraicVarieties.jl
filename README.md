@@ -1,6 +1,8 @@
 # Learning Algebraic Varieties
 Welcome to the LearningAlgebraicVarieties package from the article [Learning Algebraic Varieties from Samples](https://link.springer.com/content/pdf/10.1007/s13163-018-0273-6.pdf) by P. Breiding, S. Kalisnik, B. Sturmfels and M. Weinstein.
 
+Special thanks to [V. Valve](http://math.tkk.fi/en/people/venla.valve) who helped updating the PHCcurve diagrams. 
+
 To install the package, open a new `Julia` session and type
 ```julia
 ]add LearningAlgebraicVarieties
