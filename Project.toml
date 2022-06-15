@@ -1,7 +1,7 @@
 name = "LearningAlgebraicVarieties"
 uuid = "99c59dee-8a25-45ad-b85d-0d599d702169"
 authors = ["PBrdng <pbrdng@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
