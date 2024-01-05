@@ -1,4 +1,4 @@
-using Test, LinearAlgebra, DynamicPolynomials
+using Test, LinearAlgebra, HomotopyContinuation
 using LearningAlgebraicVarieties
 const LAV = LearningAlgebraicVarieties
 
@@ -20,12 +20,14 @@ const LAV = LearningAlgebraicVarieties
     D = LAV.ScaledFubiniStudy(data)
     @test maximum(D) <= 1
 
-    @polyvar x y
+    @var x y
     f = x^2 + 2y^2 - 1
 
     D = LAV.EllipsoidDistances(data, f, 0.5)
     @test size(D) == (10,10)
     D = LAV.EllipsoidDistances(data, [f], 0.5)
+    @test size(D) == (10,10)
+    D = LAV.EllipsoidDistances(data, System([f]), 0.5)
     @test size(D) == (10,10)
 end
 
@@ -142,7 +144,8 @@ end
     data = hcat(map(i -> [i[1];-i[1]+1], rand(10))...)
 
     f = LAV.FindEquations(data, :with_svd, 1, false)
-    @test abs(f[1]([1;0])) < 1e-15
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
 
     f = LAV.FindEquations(data, :with_svd, 2, true)
     @test f[1] == 0
@@ -153,25 +156,31 @@ end
 
     M = LAV.MultivariateVandermondeMatrix(data, [[1,0], [1,1]])
     @test size(M.Vandermonde) == (10,2)
-
+    
     M = LAV.MultivariateVandermondeMatrix(data, 1, false)
     @test size(M.Vandermonde) == (10,3)
-
+    
     f = LAV.FindEquations(M, :with_svd)
-    @test abs(f[1]([1;0])) < 1e-15
-
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
+    
     f = LAV.FindEquations(M, :with_svd, 1e-12)
-    @test abs(f[1]([1;0])) < 1e-15
-
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
+    
     f = LAV.FindEquations(M, :with_qr)
-    @test abs(f[1]([1;0])) < 1e-15
-
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
+    
     f = LAV.FindEquations(M, :with_qr, 1e-12)
-    @test abs(f[1]([1;0])) < 1e-15
-
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
+    
     f = LAV.FindEquations(M, :with_rref)
-    @test abs(f[1]([1;0])) < 1e-15
-
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
+    
     f = LAV.FindEquations(M, :with_rref, 1e-12)
-    @test abs(f[1]([1;0])) < 1e-15
+    F = System(f)
+    @test norm(F([1;0])) < 1e-15
 end
