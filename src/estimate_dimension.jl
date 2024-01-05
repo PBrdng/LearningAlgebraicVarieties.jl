@@ -147,7 +147,7 @@ function EstimateDimensionNPCA(data::Array{T,2}, ϵ_array::Vector{S}, projective
     end
 end
 function EstimateDimensionNPCA(data::Array{T,2}, projective::Bool; eps_ticks = 25) where {T<:Number}
-    ϵ = Array{Float64}(range(0.1, length =eps_ticks, stop = 0.9))
+    ϵ = Array{Float64}(range(0.1, length = eps_ticks, stop = 0.9))
     EstimateDimensionNPCA(data, ϵ, projective)
 end
 

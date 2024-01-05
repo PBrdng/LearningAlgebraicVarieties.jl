@@ -3,11 +3,8 @@ module LearningAlgebraicVarieties
     import Plots
     import LinearAlgebra
     import Statistics
-    import FixedPolynomials
-    const FP = FixedPolynomials
-    import MultivariatePolynomials
-    const MP = MultivariatePolynomials
-    import DynamicPolynomials
+    import HomotopyContinuation
+    const HC = HomotopyContinuation
     import Combinatorics
     import RowEchelon
     import Clustering

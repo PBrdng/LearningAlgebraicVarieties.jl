@@ -90,12 +90,14 @@ end
 # This function creates a function v.
 # v(x) is the array with all the monomials in the entries of x of degree d
 function veronese(exponents::Vector, ::Type{T}, n::Int)  where {T<:Number}
-    v = map(exponents) do e
-        FP.Polynomial(reshape(e, n, 1), [one(T)])
-    end
-    function (x::Vector)
-        FP.evaluate(v,x)
-    end
+    HC.@var var[1:n]
+    v = HC.System(
+        map(exponents) do e
+            prod(var .^ convert.(Int, e))
+        end,
+        variables = var
+    )
+    v
 end
 
 
@@ -153,7 +155,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
     tol = 1e-10
     l = size(kernel,1)
     nvars = length(exponents[1])
-    DynamicPolynomials.@polyvar x_[1:nvars]
+    HC.@var x[1:nvars]
 
     if l == 0
         return [0]
@@ -161,7 +163,7 @@ function Polynomials_from_coefficients(kernel::Matrix{T}, exponents::Vector) whe
         map(1:l) do i
             non_zero_coeffs = findall(x -> abs(x) > tol, kernel[i,:])
             if length(non_zero_coeffs) > 0
-                monomial = map(c -> prod(map(i -> x_[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
+                monomial = map(c -> prod(map(i -> x[i]^exponents[c][i], 1:nvars)), non_zero_coeffs)
                 return LinearAlgebra.dot(kernel[i,non_zero_coeffs],  monomial)
             else
                 return 0.0*x[1]

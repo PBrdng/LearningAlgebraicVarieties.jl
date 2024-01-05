@@ -22,7 +22,11 @@ end
 function ScaledEuclidean(data::Array{T,2}) where {T<:Number}
     D = EuclideanDistances(data)
     m = maximum(D)
-    return D./m
+    if m > 0
+        return D ./ m
+    else 
+        return D
+    end
 end
 
 """
@@ -33,18 +37,19 @@ Returns the pairwise Fubini-Study distance of the of the columns of data.
 function FubiniStudyDistances(data::Array{T,2}) where {T<:Number}
     m = size(data, 2)
     norms = [LinearAlgebra.norm(data[:,i]) for i in 1:m]
-
     D = map(Base.Iterators.product(1:m, 1:m)) do i
         if i[1] < i[2]
             p = abs(LinearAlgebra.dot(data[:,i[1]], data[:,i[2]]) / (norms[i[1]] * norms[i[2]]))
             if p > 1
                 p = 1.0
             end
+            
             return acos(p)
         else
             return 0.0
         end
     end
+
     return D+transpose(D)
 end
 function FubiniStudyDistances!(u::Array{T,2}, data::Array{S,2}) where {T,S<:Number}
@@ -73,8 +78,11 @@ Returns the pairwise Fubini-Study distance of the columns of data, and scales th
 function ScaledFubiniStudy(data::Array{T,2}) where {T<:Number}
     D = FubiniStudyDistances(data)
     m = maximum(D)
-
-    return D ./ m
+    if m > 0
+        return D ./ m
+    else 
+        return D
+    end
 end
 
 
@@ -114,12 +122,12 @@ EllipsoidDistance(data::Array{T,2}, f, λ::Number)
 
 Returns the matrix with distances between points weighted by the radii in direction data[:,i]-data[:,j] of ellipsoids that have radius 1 in tangent direction of {f=0} and radius λ in normal direction of {f=0}.
 """
-
-function EllipsoidDistances(data::Array{T,2}, f::Vector{S}, λ::Number) where {T<:Number, S<:MP.AbstractPolynomialLike}
+EllipsoidDistances(data::Array{T,2}, f::Vector{S}, λ::Number) where {T<:Number, S<:HC.ModelKit.Expression} = EllipsoidDistances(data, HC.System(f, variables = HC.variables(f)), λ)
+EllipsoidDistances(data::Array{T,2}, f::S, λ::Number) where {T<:Number, S<:HC.ModelKit.Expression} = EllipsoidDistances(data, HC.System([f], variables = HC.variables(f)), λ)
+function EllipsoidDistances(data::Array{T,2}, F::S, λ::Number) where {T<:Number, S<:HC.System}
     n, m = size(data)
-    F = FP.System(convert(Vector{FP.Polynomial{Float64}}, f))
-    cfg = FP.JacobianConfig(F)
-    Js = [FP.jacobian(F, data[:,i], cfg) for i in 1:m]
+    Jac = HC.jacobian(F)
+    Js = [[HC.evaluate(j, HC.variables(F) => data[:,i]) for j in Jac] for i in 1:m]
     Vs = [LinearAlgebra.svd(J, full = true).V for J in Js]
     r = LinearAlgebra.rank(Js[rand(1:m)])
     Σ = LinearAlgebra.diagm(0 => [λ .* ones(r); ones(n-r)])
@@ -151,9 +159,6 @@ function EllipsoidDistances(data::Array{T,2}, f::Vector{S}, λ::Number) where {T
     return D+transpose(D)
 end
 
-function EllipsoidDistances(data::Array{T,2}, f::S, λ::Number) where {T<:Number, S<:MP.AbstractPolynomialLike}
-        EllipsoidDistances(data, [f], λ)
-end
 
 #
 # """
