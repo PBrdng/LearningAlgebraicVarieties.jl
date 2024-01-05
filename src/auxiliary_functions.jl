@@ -128,7 +128,6 @@ function EllipsoidDistances(data::Array{T,2}, F::S, λ::Number) where {T<:Number
     n, m = size(data)
     Jac = HC.jacobian(F)
     Js = [[HC.evaluate(j, HC.variables(F) => data[:,i]) for j in Jac] for i in 1:m]
-    @show typeof Js
     Vs = [LinearAlgebra.svd(J, full = true).V for J in Js]
     r = LinearAlgebra.rank(Js[rand(1:m)])
     Σ = LinearAlgebra.diagm(0 => [λ .* ones(r); ones(n-r)])
